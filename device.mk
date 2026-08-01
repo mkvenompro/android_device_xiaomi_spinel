@@ -99,4 +99,4 @@ PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH)
 
 # Inherit the proprietary files
-$(call inherit-product, vendor/xiaomi/spinel/spinel-vendor.mk)
+$(call inherit-product, vendor/xiaomi/generic/generic-vendor.mk)

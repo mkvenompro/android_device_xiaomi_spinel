@@ -4,9 +4,9 @@
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/lineage_spinel.mk
+    $(LOCAL_DIR)/lineage_generic.mk
 
 COMMON_LUNCH_CHOICES := \
-    lineage_spinel-user \
-    lineage_spinel-userdebug \
-    lineage_spinel-eng
+    lineage_generic-user \
+    lineage_generic-userdebug \
+    lineage_generic-eng

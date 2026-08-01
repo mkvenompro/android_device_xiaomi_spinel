@@ -10,11 +10,11 @@ from extract_utils.main import (
 )
 
 namespace_imports = [
-    'device/xiaomi/spinel',
+    'device/xiaomi/generic',
 ]
 
 module = ExtractUtilsModule(
-    'spinel',
+    'generic',
     'xiaomi',
     namespace_imports=namespace_imports,
 )

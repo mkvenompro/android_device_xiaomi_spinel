@@ -7,20 +7,20 @@
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 
-# Inherit from spinel device
-$(call inherit-product, device/xiaomi/spinel/device.mk)
+# Inherit from generic device
+$(call inherit-product, device/xiaomi/generic/device.mk)
 
 # Inherit some common Lineage stuff.
 $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 
-PRODUCT_DEVICE := spinel
-PRODUCT_NAME := lineage_spinel
-PRODUCT_BRAND := Redmi
-PRODUCT_MODEL := 2510DRA23E
-PRODUCT_MANUFACTURER := Xiaomi
+PRODUCT_DEVICE := generic
+PRODUCT_NAME := lineage_generic
+PRODUCT_BRAND := Android
+PRODUCT_MODEL := mainline
+PRODUCT_MANUFACTURER := xiaomi
 
 PRODUCT_GMS_CLIENTID_BASE := android-xiaomi
 
 PRODUCT_BUILD_PROP_OVERRIDES += \
-    BuildDesc="Redmi/spinel/spinel:12/SP1A.210812.016/OS2.0.212.0.VPGMIXM:user/release-keys" \
-    BuildFingerprint=Xiaomi/spinel/spinel:12/SP1A.210812.016/OS2.0.212.0.VPGMIXM:user/release-keys
+    BuildDesc="missi-user 15 AP3A.240905.015.A2 OS2.0.212.0.VPGMIXM release-keys" \
+    BuildFingerprint=Xiaomi/missi/missi:15/AP3A.240905.015.A2/OS2.0.212.0.VPGMIXM:user/release-keys
