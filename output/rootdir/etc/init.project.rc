@@ -1,0 +1,208 @@
+import /vendor/etc/init/hw/init.mtkgki.rc
+
+# MTK project .rc configure
+
+on init
+    mkdir /mnt/media_rw/usbotg 0700 media_rw media_rw
+    mkdir /storage/usbotg 0700 root root
+
+on post-fs-data
+
+#touch_hal
+    chown system system /sys/class/touch/touch_dev/palm_sensor
+
+#Thermal
+    mkdir /data/vendor/thermal 0771 root system
+    mkdir /data/vendor/thermal/config 0771 root system
+    chown system system /sys/class/thermal/thermal_message/sconfig
+    chown system system /sys/class/thermal/thermal_message/boost
+    chown system system /sys/class/thermal/thermal_message/temp_state
+    chown system system /sys/class/thermal/thermal_message/thermal_max_brightness
+    chown system system /sys/class/thermal/thermal_message/balance_mode
+    chown system system /sys/class/mi_display/disp-DSI-0/thermal_hbm_disabled
+    chmod 0664 /sys/class/mi_display/disp-DSI-0/thermal_hbm_disabled
+    chown system system /sys/class/thermal/thermal_message/charger_temp
+    chown system system /sys/class/power_supply/battery/constant_charge_current
+    chmod 0664 /sys/class/power_supply/battery/constant_charge_current
+
+#Camera
+    mkdir /data/vendor/camera/ 0777 system camera
+    chmod 0660 /dev/MAINAF
+    chown system camera /dev/MAINAF
+
+    chmod 0660 /dev/MAINAF2
+    chown system camera /dev/MAINAF2
+
+    chmod 0660 /dev/SUBAF
+    chown system camera /dev/SUBAF
+
+    chmod 0660 /dev/GAF001AF
+    chown system camera /dev/GAF001AF
+
+    chmod 0660 /dev/DW9714AF
+    chown system camera /dev/DW9714AF
+
+    chmod 0660 /dev/LC898212AF
+    chown system camera /dev/LC898212AF
+
+    chmod 0660 /dev/BU64745GWZAF
+    chown system camera /dev/BU64745GWZAF
+
+# MIUI ADD: Performance_BoostFramework
+    chown system system /sys/module/perf_helper/mimd/mimdtrigger
+# END Performance_BoostFramework
+
+#SMB
+    chown system system /proc/smb/ScreenComm
+    chmod 0660 /proc/smb/ScreenComm
+
+    chmod 0660 /dev/spm
+    chown system system /dev/spm
+
+on boot && property:persist.sys.stability.smartfocusio=on
+    write /sys/block/sda/queue/scheduler cpq
+
+#dual calib
+     mkdir /data/vendor/camera/ 0777 system camera
+     chmod 0777 /mnt/vendor/persist/camera/com.xiaomi.dcal.wu.bin
+     chmod 0777 /mnt/vendor/persist/camera/rear_dc_cal_wu.bin
+     chmod 0777 /mnt/vendor/persist/camera/rear_dc_cal_wt.bin
+     chmod 0777 /data/vendor/camera/com.xiaomi.dcal.wu.data
+     chmod 0777 /data/vendor/camera/rear_dc_cal_wu.bin
+     restorecon /mnt/vendor/persist/camera/com.xiaomi.dcal.wu.bin
+     restorecon /mnt/vendor/persist/camera/rear_dc_cal_wu.bin
+     mkdir /mnt/vendor/persist/camera 0777 system camera
+     chmod 0777 /vendor/etc/camera/com.xiaomi.dcal.wd.golden
+     chmod 0777 /vendor/etc/camera/dualcam_cali_golden_1_1
+     chmod 0777 /vendor/etc/camera/dualcam_cali_golden_1_2
+     chmod 0777 /vendor/etc/camera/dualcam_cali_golden_2_1
+     chmod 0777 /vendor/etc/camera/dualcam_cali_golden_2_2
+     chmod 0777 /vendor/etc/camera/dualcam_cali_golden_3_1
+     chmod 0777 /vendor/etc/camera/dualcam_cali_golden_3_2
+     chmod 0777 /vendor/etc/camera/com.xiaomi.dcal.wu.golden
+     chmod 0777 /data/vendor/camera/golden_rear_dc_cal_wt.bin
+#P7 code intsense bokeh use
+    mkdir /data/vendor/camera/model 0777 system camera
+    mkdir /data/vendor/camera/model/dof_model 0777 system camera
+    mkdir /data/vendor/camera/model/rt_model 0777 system camera
+    mkdir /data/vendor/camera/dof_mecp 0777 system camera
+    chown system system /data/vendor/camera/com.xiaomi.dcal.wd.data
+    chown system system /data/vendor/camera/com.xiaomi.dcal.wu.data
+    chmod 0777 /data/vendor/camera/com.xiaomi.dcal.wd.data
+    chmod 0777 /data/vendor/camera/com.xiaomi.dcal.wu.data
+    copy /vendor/etc/camera/model/dof_model/sg_body_model /data/vendor/camera/model/dof_model/sg_body_model
+    copy /vendor/etc/camera/model/dof_model/sg_body_cache /data/vendor/camera/model/dof_model/sg_body_cache
+    copy /vendor/etc/camera/model/dof_model/sg_body_policy /data/vendor/camera/model/dof_model/sg_body_policy
+    copy /vendor/etc/camera/model/dof_model/sg_depth_model /data/vendor/camera/model/dof_model/sg_depth_model
+    copy /vendor/etc/camera/model/dof_model/sg_depth_cache /data/vendor/camera/model/dof_model/sg_depth_cache
+    copy /vendor/etc/camera/model/dof_model/sg_depth_policy /data/vendor/camera/model/dof_model/sg_depth_policy
+    copy /vendor/etc/camera/model/dof_model/sg_seg_model /data/vendor/camera/model/dof_model/sg_seg_model
+    copy /vendor/etc/camera/model/dof_model/sg_seg_cache /data/vendor/camera/model/dof_model/sg_seg_cache
+    copy /vendor/etc/camera/model/dof_model/sg_seg_policy /data/vendor/camera/model/dof_model/sg_seg_policy
+    copy /vendor/etc/camera/model/dof_model/sg_hc_opr_cache /data/vendor/camera/model/dof_model/sg_hc_opr_cache
+    copy /vendor/etc/camera/model/rt_model/preview_cache /data/vendor/camera/model/rt_model/preview_cache
+    copy /vendor/etc/camera/model/rt_model/preview_model /data/vendor/camera/model/rt_model/preview_model
+    copy /vendor/etc/camera/model/rt_model/preview_policy /data/vendor/camera/model/rt_model/preview_policy
+    copy /vendor/etc/camera/dof_mecp/dof_mecp.bin /data/vendor/camera/dof_mecp/dof_mecp.bin
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_body_model
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_body_cache
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_body_policy
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_depth_model
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_depth_cache
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_depth_policy
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_seg_model
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_seg_cache
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_seg_policy
+    chmod 0666 /data/vendor/camera/model/dof_model/sg_hc_opr_cache
+    chmod 0666 /data/vendor/camera/model/rt_model/preview_cache
+    chmod 0666 /data/vendor/camera/model/rt_model/preview_model
+    chmod 0666 /data/vendor/camera/model/rt_model/preview_policy
+    chmod 0666 /data/vendor/camera/dof_mecp/dof_mecp.bin
+#P7 code intsense bokeh use
+
+on init
+    # Refer to http://source.android.com/devices/tech/storage/index.html
+    # It said, "Starting in Android 4.4, multiple external storage devices are surfaced to developers through
+    #           Context.getExternalFilesDirs(), Context.getExternalCacheDirs(), and Context.getObbDirs().
+    #           External storage devices surfaced through these APIs must be a semi-permanent part of the device (such as an SD card slot in a battery compartment).
+    #           Developers expect data stored in these locations to be available over long periods of time."
+    # Therefore, if the target doesn't support sd hot-plugging (Ex: the SD card slot in a battery compartment), we need to export SECONDARY_STORAGE in 'boot' section
+    #
+    # export SECONDARY_STORAGE /storage/sdcard1
+
+service fuse_usbotg /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/usbotg /storage/usbotg
+    class late_start
+    disabled
+
+# start mmstat
+on property:sys.boot_completed=1
+    mkdir /sys/kernel/tracing/instances/mmstat 711
+    write /sys/kernel/tracing/instances/mmstat/tracing_on 0
+    write /sys/kernel/tracing/instances/mmstat/buffer_size_kb 16
+    write /sys/kernel/tracing/instances/mmstat/events/mmstat/enable 1
+    write /sys/kernel/tracing/instances/mmstat/tracing_on 1
+
+# start charger
+on post-fs-data
+    chmod 0664 /sys/class/Charging_Adapter/pd_adapter/usbpd_verifed
+    chmod 0664 /sys/class/Charging_Adapter/pd_adapter/request_vdm_cmd
+    chmod 0664 /sys/class/Charging_Adapter/pd_adapter/verify_process
+    chmod 0664 /sys/class/Charging_Adapter/pd_adapter/pd_auth
+    chmod 0664 /sys/class/power_supply/bms/verify_digest
+    chmod 0664 /sys/class/power_supply/usb/real_type
+    chmod 0664 /sys/class/power_supply/usb/apdo_max
+    chmod 0664 /sys/class/power_supply/battery/authentic
+    chmod 0664 /sys/class/factory/input_suspend
+    chmod 0664 /sys/class/power_supply/battery/disable_chg
+    chmod 0664 /sys/class/power_supply/battery/ato_soc_user_control
+
+#charge_logger
+    chmod 0777 /data/vendor
+    mkdir /data/vendor/charge_logger 0775 system system
+    chmod 0644 /data/vendor/charge_logger/charge_logger_a.csv
+    chown system system /data/vendor/charge_logger/charge_logger_a.csv
+
+on property:vendor.audio.usb_cctoggle=1
+    write /sys/class/power_supply/usb/audio_usb_cctoggle 1
+on property:vendor.audio.usb_cctoggle=0
+    write /sys/class/power_supply/usb/audio_usb_cctoggle 0
+
+on property:sys.boot_completed=1
+    start charge_logger
+
+service charge_logger /vendor/bin/charge_logger
+    class last_start
+    user system
+    group system system wakelock
+    disabled
+    oneshot
+    seclabel u:r:charge_logger:s0
+
+on property:sys.boot_completed=1
+    write /sys/module/lx_chg/parameters/boot_complete Y
+# end charger
+
+# Millet Aurogon
+on init
+    insmod /vendor/lib/modules/millet_core.ko
+    insmod /vendor/lib/modules/binder_gki.ko
+    insmod /vendor/lib/modules/millet_binder.ko
+    insmod /vendor/lib/modules/millet_hs.ko
+    insmod /vendor/lib/modules/millet_pkg.ko
+    insmod /vendor/lib/modules/millet_sig.ko
+    insmod /vendor/lib/modules/millet_oem_cgroup.ko
+
+#+ExtR WTFEAT-48654,majunyin,modify,2025/7/9,Add support single sim start
+on property:ro.boot.multisim=ss
+    setprop persist.radio.multisim.config ${ro.boot.multisim}
+    setprop ro.boot.opt_sim_count 1
+    setprop ro.vendor.miui.singlesim 1
+    setprop ro.miui.singlesim 1
+    setprop telephony.active_modems.max_count 1
+on property:ro.boot.multisim=dsds
+    setprop persist.radio.multisim.config ${ro.boot.multisim}
+    setprop ro.boot.opt_sim_count 2
+    setprop ro.vendor.miui.singlesim 0
+    setprop ro.miui.singlesim 0
+    setprop telephony.active_modems.max_count 2
+#-ExtR WTFEAT-48654,majunyin,modify,2025/7/9,Add support single sim start
