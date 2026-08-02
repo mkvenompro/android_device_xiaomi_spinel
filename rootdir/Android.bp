@@ -12,9 +12,10 @@ prebuilt_etc {
 }
 
 prebuilt_etc {
-    name: "fstab.emmc",
-    src: "etc/fstab.emmc",
-    vendor: true
+    name: "fstab.mt6789",
+    src: "etc/fstab.mt6789",
+    vendor: true,
+    vendor_ramdisk_available: true
 }
 
 prebuilt_etc {
@@ -38,6 +39,13 @@ sh_binary {
 sh_binary {
     name: "playback.sh",
     src: "bin/playback.sh",
+}
+
+prebuilt_etc {
+    name: "init.connectivity.common.rc",
+    src: "etc/init/hw/init.connectivity.common.rc",
+    sub_dir: "init/hw",
+    vendor: true
 }
 
 prebuilt_etc {

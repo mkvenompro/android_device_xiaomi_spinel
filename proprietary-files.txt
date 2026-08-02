@@ -75,8 +75,8 @@ vendor/lib64/libdlbpreg.so
 vendor/lib64/libvibrator.so
 
 # Audio configs
-etc/audio_effects.conf
-etc/audio_effects.xml
+system/etc/audio_effects.conf
+system/etc/audio_effects.xml
 system_ext/etc/a2dp_audio_policy_configuration.xml
 system_ext/etc/a2dp_in_audio_policy_configuration.xml
 system_ext/etc/audio_policy_configuration.xml
@@ -255,6 +255,12 @@ vendor/lib64/vendor.mediatek.hardware.bluetooth.audio@2.1.so
 vendor/lib64/vendor.mediatek.hardware.bluetooth.audio@2.2.so
 
 # Boot
+
+# Init
+system_ext/etc/init/hw/init.aee.rc
+vendor/etc/init/hw/init.aee.rc
+vendor/etc/init/hw/init.cgroup.rc
+vendor/etc/init/hw/init_connectivity.rc
 
 # Camera
 system_ext/lib/vendor.mediatek.hardware.camera.atms-V1-ndk.so
@@ -2558,6 +2564,8 @@ vendor/lib/hw/gps.default.so
 vendor/lib64/hw/gps.default.so
 vendor/lib64/mt6789/libDR.so
 vendor/lib64/mt6789/libmnl.so
+vendor/lib64/hw/android.hardware.gnss@2.1-impl-mediatek.so
+vendor/lib64/hw/android.hardware.gnss-impl-mediatek.so
 
 # GNSS configs
 vendor/etc/gnss/carrier/agps_profiles_conf2_carrier_ATnT_Mexico.xml
@@ -2606,28 +2614,28 @@ vendor/lib/hw/local_time.default.so
 vendor/lib64/hw/local_time.default.so
 
 # Media
-etc/seccomp_policy/mediacodec.policy
-lib/graphicbuffersource-aidl-ndk.so
-lib/libmedia_codeclist.so
-lib/libstagefright.so.hbtf
-lib/libstagefright_aidl_bufferpool2.so
-lib/libstagefright_bufferpool@2.0.1.so
-lib/libstagefright_bufferpool@2.0.1.so.hbtf
-lib/libstagefright_codecbase.so
-lib/libstagefright_codecbase.so.hbtf
-lib/libstagefright_foundation.so.hbtf
-lib/libstagefright_framecapture_utils.so
-lib/libstagefright_framecapture_utils.so.hbtf
-lib/libstagefright_graphicbuffersource_aidl.so
-lib/libstagefright_surface_utils.so
-lib64/graphicbuffersource-aidl-ndk.so
-lib64/libmedia_codeclist.so
-lib64/libstagefright_aidl_bufferpool2.so
-lib64/libstagefright_bufferpool@2.0.1.so
-lib64/libstagefright_codecbase.so
-lib64/libstagefright_framecapture_utils.so
-lib64/libstagefright_graphicbuffersource_aidl.so
-lib64/libstagefright_surface_utils.so
+system/etc/seccomp_policy/mediacodec.policy
+system/lib/graphicbuffersource-aidl-ndk.so
+system/lib/libmedia_codeclist.so
+system/lib/libstagefright.so.hbtf
+system/lib/libstagefright_aidl_bufferpool2.so
+system/lib/libstagefright_bufferpool@2.0.1.so
+system/lib/libstagefright_bufferpool@2.0.1.so.hbtf
+system/lib/libstagefright_codecbase.so
+system/lib/libstagefright_codecbase.so.hbtf
+system/lib/libstagefright_foundation.so.hbtf
+system/lib/libstagefright_framecapture_utils.so
+system/lib/libstagefright_framecapture_utils.so.hbtf
+system/lib/libstagefright_graphicbuffersource_aidl.so
+system/lib/libstagefright_surface_utils.so
+system/lib64/graphicbuffersource-aidl-ndk.so
+system/lib64/libmedia_codeclist.so
+system/lib64/libstagefright_aidl_bufferpool2.so
+system/lib64/libstagefright_bufferpool@2.0.1.so
+system/lib64/libstagefright_codecbase.so
+system/lib64/libstagefright_framecapture_utils.so
+system/lib64/libstagefright_graphicbuffersource_aidl.so
+system/lib64/libstagefright_surface_utils.so
 system_ext/lib/libged_sys.so
 system_ext/lib/libgralloc_extra_sys.so
 system_ext/lib/libsf_cpupolicy.so
@@ -2715,6 +2723,10 @@ vendor/etc/media_codecs_google_audio.xml
 vendor/etc/media_codecs_mediatek_audio.xml
 vendor/etc/media_codecs_system_default.xml
 
+# HotwordEnrollment
+system_ext/etc/permissions/com.android.hotwordenrollment.common.util.xml
+system_ext/framework/com.android.hotwordenrollment.common.util.jar
+
 # Neural networks
 vendor/bin/hw/android.hardware.neuralnetworks-shim-service-mtk
 vendor/bin/hw/vendor.mediatek.hardware.mmagent@1.1-service
@@ -2740,7 +2752,7 @@ vendor/lib64/se_nq_extn_client.so
 vendor/lib64/vendor.nxp.hardware.nfc@2.0.so
 
 # NFC configs
-etc/libnfc-nci.conf
+system/etc/libnfc-nci.conf
 odm/etc/libnfc-nxp.conf
 odm/etc/libnfc-nxp_RF.conf
 
@@ -3077,6 +3089,8 @@ vendor/lib64/libwifi-hal.so
 
 # Wi-Fi firmware
 # Miscellaneous
+vendor/lib64/libc++_shared.so
+vendor/lib64/libpixelflinger.so
 odm/etc/boardid_property/S99007AA1.prop
 odm/etc/boardid_property/S99007IA1.prop
 odm/etc/boardid_property/S99007OA1.prop
@@ -4574,151 +4588,20 @@ vendor/mitee/ta/a734eed9-d6a1-4244-aa507c99719e7b7f.ta
 vendor/mitee/ta/dba51a17-0563-11e7-93b16fa7b0071a51.ta
 vendor/mitee/ta/e5140b33-76fa-4c63-ab18062caab2fb5c.ta
 vendor/mitee/ta/e97c270e-a5c4-4c58-bcd3384a2fa2539e.ta
-vendor/odm/etc/boardid_property/S99007AA1.prop
-vendor/odm/etc/boardid_property/S99007IA1.prop
-vendor/odm/etc/boardid_property/S99007OA1.prop
-vendor/odm/etc/boardid_property/odm.prop
-vendor/odm/etc/camera/camerabooster.json
-vendor/odm/etc/camera/cameraopt.json
-vendor/odm/etc/charger/BAA_config_common.json
-vendor/odm/etc/charger/BAA_config_spinel.json
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLutInfo.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_0.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_1.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_10.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_11.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_12.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_13.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_14.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_15.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_16.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_17.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_18.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_19.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_2.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_20.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_21.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_22.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_23.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_24.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_25.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_26.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_27.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_3.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_4.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_5.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_6.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_7.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_8.txt
-vendor/odm/etc/disp0/dsi_p7_35_0f_0c_dsc_vdo/miLut_9.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLutInfo.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_0.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_1.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_10.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_11.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_12.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_13.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_14.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_15.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_16.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_17.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_18.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_19.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_2.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_20.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_21.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_22.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_23.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_24.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_25.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_26.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_27.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_3.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_4.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_5.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_6.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_7.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_8.txt
-vendor/odm/etc/disp0/dsi_p7_36_0d_0a_dsc_vdo/miLut_9.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLutInfo.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_0.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_1.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_10.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_11.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_12.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_13.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_14.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_15.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_16.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_17.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_18.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_19.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_2.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_20.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_21.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_22.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_23.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_24.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_25.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_26.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_27.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_3.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_4.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_5.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_6.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_7.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_8.txt
-vendor/odm/etc/disp0/dsi_p7_41_02_0b_dsc_vdo/miLut_9.txt
-vendor/odm/etc/init/display.rc
-vendor/odm/etc/init/init.SNxxx.nfc.rc
-vendor/odm/etc/permissions/sku_hcesim_dsds/android.hardware.nfc.hce.xml
-vendor/odm/etc/permissions/sku_hcesim_dsds/android.hardware.nfc.hcef.xml
-vendor/odm/etc/permissions/sku_hcesim_dsds/android.hardware.nfc.uicc.xml
-vendor/odm/etc/permissions/sku_hcesim_dsds/android.hardware.nfc.xml
-vendor/odm/etc/permissions/sku_hcesim_dsds/android.hardware.se.omapi.uicc.xml
-vendor/odm/etc/permissions/sku_hcesim_dsds/com.android.nfc_extras.xml
-vendor/odm/etc/permissions/sku_hcesim_dsds/com.nxp.mifare.xml
-vendor/odm/etc/permissions/sku_hcesim_ss/android.hardware.nfc.hce.xml
-vendor/odm/etc/permissions/sku_hcesim_ss/android.hardware.nfc.hcef.xml
-vendor/odm/etc/permissions/sku_hcesim_ss/android.hardware.nfc.uicc.xml
-vendor/odm/etc/permissions/sku_hcesim_ss/android.hardware.nfc.xml
-vendor/odm/etc/permissions/sku_hcesim_ss/android.hardware.se.omapi.uicc.xml
-vendor/odm/etc/permissions/sku_hcesim_ss/com.android.nfc_extras.xml
-vendor/odm/etc/permissions/sku_hcesim_ss/com.nxp.mifare.xml
-vendor/odm/etc/sensors/lightSensorCali.json
-vendor/odm/etc/sensors/lightSensorCali_JDF.json
-vendor/odm/etc/sensors/lightSensorCali_TM.json
-vendor/odm/etc/sensors/lightSensorCali_WXN.json
-vendor/odm/etc/sensors/lightSensorConfig.json
-vendor/odm/etc/sensors/lightSensorConfig_JDF.json
-vendor/odm/etc/sensors/lightSensorConfig_TM.json
-vendor/odm/etc/sensors/lightSensorConfig_WXN.json
-vendor/odm/etc/vintf/manifest_dsds.xml
-vendor/odm/etc/vintf/manifest_hcesim_dsds.xml
-vendor/odm/etc/vintf/manifest_hcesim_ss.xml
-vendor/odm/etc/vintf/manifest_nonfc_dsds.xml
-vendor/odm/etc/vintf/manifest_nonfc_ss.xml
-vendor/odm/etc/vintf/manifest_qsqs.xml
-vendor/odm/etc/vintf/manifest_ss.xml
-vendor/odm/etc/vintf/manifest_tsts.xml
-vendor/odm/etc/build_S99007AA1.prop
-vendor/odm/etc/build_S99007IA1.prop
-vendor/odm/etc/build_S99007OA1.prop
-vendor/odm/etc/default_cloud.json
-vendor/odm/etc/device_info_qr_config.yml
-vendor/odm/etc/device_sar_config.xml
-vendor/odm/etc/df_default.xml
-vendor/odm/etc/dsi_p7_35_0f_0c_dsc_vdo_mi.xml
-vendor/odm/etc/dsi_p7_36_0d_0a_dsc_vdo_mi.xml
-vendor/odm/etc/dsi_p7_41_02_0b_dsc_vdo_mi.xml
-vendor/odm/etc/libnfc-nxp.conf
-vendor/odm/etc/libnfc-nxp_RF.conf
-vendor/odm/etc/me_config.xml
-vendor/odm/etc/mimdconfig.json
-vendor/odm/etc/screen_light.xml
-vendor/odm/etc/setting.xml
-vendor/odm/lib/hw/displayfeature.default.so
-vendor/odm/lib64/hw/displayfeature.default.so
+odm/etc/permissions/sku_hcesim_dsds/android.hardware.nfc.hce.xml
+odm/etc/permissions/sku_hcesim_dsds/android.hardware.nfc.hcef.xml
+odm/etc/permissions/sku_hcesim_dsds/android.hardware.nfc.uicc.xml
+odm/etc/permissions/sku_hcesim_dsds/android.hardware.nfc.xml
+odm/etc/permissions/sku_hcesim_dsds/android.hardware.se.omapi.uicc.xml
+odm/etc/permissions/sku_hcesim_dsds/com.android.nfc_extras.xml
+odm/etc/permissions/sku_hcesim_dsds/com.nxp.mifare.xml
+odm/etc/permissions/sku_hcesim_ss/android.hardware.nfc.hce.xml
+odm/etc/permissions/sku_hcesim_ss/android.hardware.nfc.hcef.xml
+odm/etc/permissions/sku_hcesim_ss/android.hardware.nfc.uicc.xml
+odm/etc/permissions/sku_hcesim_ss/android.hardware.nfc.xml
+odm/etc/permissions/sku_hcesim_ss/android.hardware.se.omapi.uicc.xml
+odm/etc/permissions/sku_hcesim_ss/com.android.nfc_extras.xml
+odm/etc/permissions/sku_hcesim_ss/com.nxp.mifare.xml
 vendor/res/images/lcd_test_00.png
 vendor/res/images/lcd_test_01.png
 vendor/res/images/lcd_test_02.png

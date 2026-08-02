@@ -111,7 +111,9 @@ PRODUCT_PACKAGES += \
     playback.sh
 
 PRODUCT_PACKAGES += \
-    fstab.emmc \
+    fstab.mt6789 \
+    fstab.mt6789.vendor_ramdisk \
+    init.connectivity.common.rc \
     init.connectivity.rc \
     init.modem.rc \
     init.mt6789.rc \
@@ -122,9 +124,6 @@ PRODUCT_PACKAGES += \
     init.recovery.usb.rc \
     init.sensor_2_0.rc \
     ueventd.mt6789.rc
-
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/rootdir/etc/fstab.emmc:$(TARGET_VENDOR_RAMDISK_OUT)/first_stage_ramdisk/fstab.emmc
 
 # Reduce system server verbosity.
 PRODUCT_SYSTEM_SERVER_DEBUG_INFO := false
