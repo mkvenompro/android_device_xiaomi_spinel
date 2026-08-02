@@ -230,14 +230,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.consumerir.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.consumerir.xml
 
 # Power
-$(call soong_config_set,power_libperfmgr,mode_extension_lib, //$(LOCAL_PATH):libperfmgr-ext-xiaomi)
-PRODUCT_PACKAGES += \
-    android.hardware.power-service.lineage-libperfmgr \
-    vendor.mediatek.hardware.mtkpower@1.2-service.stub
-
-# Power configurations
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/powerhint.json:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.json
+# Uses MTK power HAL from the OS2 dump (vendor.mediatek.hardware.mtkpower@1.0-service)
 
 # Soundtrigger
 PRODUCT_PACKAGES += \
@@ -288,13 +281,11 @@ PRODUCT_PACKAGES += \
     init.connectivity.rc \
     init.modem.rc \
     init.mt6789.rc \
-    init.mt6789.power.rc \
     init.mt6789.usb.rc \
     init.mtkgki.rc \
     init.project.rc \
     init.recovery.usb.rc \
-    init.sensor_2_0.rc \
-    ueventd.mt6789.rc
+    init.sensor_2_0.rc
 
 # Reduce system server verbosity.
 PRODUCT_SYSTEM_SERVER_DEBUG_INFO := false
@@ -308,7 +299,6 @@ include $(LOCAL_PATH)/vendor_logtag.mk
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH) \
-    hardware/lineage/interfaces/power-libperfmgr \
     hardware/mediatek \
     hardware/mediatek/libaedv \
     hardware/mediatek/libmtkperf_client \

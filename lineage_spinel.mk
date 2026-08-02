@@ -22,5 +22,5 @@ PRODUCT_MANUFACTURER := Xiaomi
 PRODUCT_GMS_CLIENTID_BASE := android-xiaomi
 
 PRODUCT_BUILD_PROP_OVERRIDES += \
-    BuildDesc="Redmi/spinel/spinel:12/SP1A.210812.016/OS2.0.212.0.VPGMIXM:user/release-keys" \
-    BuildFingerprint=Xiaomi/spinel/spinel:12/SP1A.210812.016/OS2.0.212.0.VPGMIXM:user/release-keys
+    BuildFingerprint=Xiaomi/missi/missi:15/AP3A.240905.015.A2/OS2.0.212.0.VPGMIXM:user/release-keys \
+    BuildDesc="missi-user 15 AP3A.240905.015.A2 OS2.0.212.0.VPGMIXM release-keys"
