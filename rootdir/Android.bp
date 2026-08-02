@@ -42,6 +42,13 @@ sh_binary {
 }
 
 prebuilt_etc {
+    name: "init.zram.rc",
+    src: "etc/init/hw/init.zram.rc",
+    sub_dir: "init/hw",
+    vendor: true,
+}
+
+prebuilt_etc {
     name: "init.connectivity.common.rc",
     src: "etc/init/hw/init.connectivity.common.rc",
     sub_dir: "init/hw",
