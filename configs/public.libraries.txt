@@ -1,0 +1,3 @@
+libOpenCL.so
+libanc_single_bokeh.so 64
+libwa_cap_refocus.so 64

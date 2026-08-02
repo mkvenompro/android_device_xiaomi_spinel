@@ -94,8 +94,6 @@ system_ext/etc/r_submix_audio_policy_configuration.xml
 system_ext/etc/usb_audio_policy_configuration.xml
 vendor/etc/a2dp_audio_policy_configuration.xml
 vendor/etc/a2dp_in_audio_policy_configuration.xml
-vendor/etc/audio_effects.xml
-vendor/etc/audio_policy_configuration.xml
 vendor/etc/audio_policy_configuration_bluetooth_legacy_hal.xml
 vendor/etc/audio_policy_volumes.xml
 vendor/etc/bluetooth_audio_policy_configuration.xml
@@ -2697,8 +2695,6 @@ vendor/lib64/libvcodec_oal.so
 # Media (Dolby)
 vendor/bin/hw/vendor.dolby.hardware.dms@2.0-service
 vendor/bin/hw/vendor.dolby.media.c2@1.0-service
-vendor/etc/dolby/dax-default-spatializer.xml
-vendor/etc/dolby/dax-default.xml
 vendor/etc/init/vendor.dolby.hardware.dms@2.0-service.rc
 vendor/etc/init/vendor.dolby.media.c2@1.0-service.rc
 vendor/etc/vintf/manifest/vendor.dolby.hardware.dms.xml
@@ -2714,13 +2710,10 @@ vendor/lib64/vendor.dolby.hardware.dms@2.0.so
 
 # Media configs
 vendor/etc/media_codecs.xml
-vendor/etc/media_codecs_c2.xml
 vendor/etc/media_codecs_dolby_audio.xml
 vendor/etc/media_codecs_google_audio.xml
 vendor/etc/media_codecs_mediatek_audio.xml
-vendor/etc/media_codecs_performance.xml
 vendor/etc/media_codecs_system_default.xml
-vendor/etc/media_profiles_V1_0.xml
 
 # Neural networks
 vendor/bin/hw/android.hardware.neuralnetworks-shim-service-mtk
@@ -2970,7 +2963,6 @@ odm/etc/sensors/lightSensorConfig.json
 odm/etc/sensors/lightSensorConfig_JDF.json
 odm/etc/sensors/lightSensorConfig_TM.json
 odm/etc/sensors/lightSensorConfig_WXN.json
-vendor/etc/sensors/hals.conf
 
 # Soundtrigger
 vendor/lib/hw/android.hardware.soundtrigger@2.3-impl.so
@@ -3083,11 +3075,7 @@ vendor/lib64/libkeystore-engine-wifi-hidl.so
 vendor/lib64/libkeystore-wifi-hidl.so
 vendor/lib64/libwifi-hal.so
 
-# Wi-Fi configs
-vendor/etc/wifi/p2p_supplicant_overlay.conf
-vendor/etc/wifi/wpa_supplicant.conf
-vendor/etc/wifi/wpa_supplicant_overlay.conf
-
+# Wi-Fi firmware
 # Miscellaneous
 odm/etc/boardid_property/S99007AA1.prop
 odm/etc/boardid_property/S99007IA1.prop
@@ -3688,8 +3676,6 @@ vendor/etc/runintestii/image.zip
 vendor/etc/runintestii/music.wav
 vendor/etc/runintestii/videotest.flv
 vendor/etc/runintestii/videotest.mp4
-vendor/etc/seccomp_policy/android.hardware.media.c2@1.2-extended-seccomp-policy
-vendor/etc/seccomp_policy/android.hardware.media.c2@1.2-mediatek-seccomp-policy
 vendor/etc/seccomp_policy/mediaextractor.policy
 vendor/etc/seccomp_policy/mediaswcodec.policy
 vendor/etc/security/cacerts/01419da9.0
@@ -3869,11 +3855,7 @@ vendor/etc/VideoLog_dynamic.xml
 vendor/etc/aee-commit
 vendor/etc/aee-config
 vendor/etc/armnn_app.config
-vendor/etc/audio_device.xml
-vendor/etc/audio_em.xml
 vendor/etc/audio_policy.conf
-vendor/etc/aurisys_config.xml
-vendor/etc/aurisys_config_rv.xml
 vendor/etc/breakwhiteapplist.xml
 vendor/etc/cust_color.xml
 vendor/etc/cust_color_dsi_p7_35_0f_0c_dsc_vdo.xml
@@ -3903,14 +3885,12 @@ vendor/etc/misound_res_spk.bin
 vendor/etc/mkshrc
 vendor/etc/mpe.conf
 vendor/etc/mtk_omx_core.cfg
-vendor/etc/mtk_platform_codecs_config.xml
 vendor/etc/mtk_vext_info
 vendor/etc/nnapi_powerhal.json
 vendor/etc/partition_permission.sh
 vendor/etc/power_app_cfg.xml
 vendor/etc/powercontable.xml
 vendor/etc/powerscntbl.xml
-vendor/etc/public.libraries.txt
 vendor/etc/slp_conf
 vendor/etc/smsdbvisitor.xml
 vendor/etc/special_pws_channel.xml
