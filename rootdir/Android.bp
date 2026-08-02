@@ -18,13 +18,6 @@ prebuilt_etc {
     vendor_ramdisk_available: true
 }
 
-prebuilt_etc {
-    name: "ueventd.mt6789.rc",
-    filename: "ueventd.rc",
-    src: "etc/ueventd.mt6789.rc",
-    vendor: true
-}
-
 sh_binary {
     name: "init.insmod.sh",
     src: "bin/init.insmod.sh",
@@ -57,56 +50,49 @@ prebuilt_etc {
 
 prebuilt_etc {
     name: "init.connectivity.rc",
-    src: "etc/init.connectivity.rc",
+    src: "etc/init/hw/init.connectivity.rc",
     sub_dir: "init/hw",
     vendor: true
 }
 
 prebuilt_etc {
     name: "init.modem.rc",
-    src: "etc/init.modem.rc",
+    src: "etc/init/hw/init.modem.rc",
     sub_dir: "init/hw",
     vendor: true
 }
 
 prebuilt_etc {
     name: "init.mt6789.rc",
-    src: "etc/init.mt6789.rc",
-    sub_dir: "init/hw",
-    vendor: true
-}
-
-prebuilt_etc {
-    name: "init.mt6789.power.rc",
-    src: "etc/init/hw/init.mt6789.power.rc",
+    src: "etc/init/hw/init.mt6789.rc",
     sub_dir: "init/hw",
     vendor: true
 }
 
 prebuilt_etc {
     name: "init.mt6789.usb.rc",
-    src: "etc/init.mt6789.usb.rc",
+    src: "etc/init/hw/init.mt6789.usb.rc",
     sub_dir: "init/hw",
     vendor: true
 }
 
 prebuilt_etc {
     name: "init.mtkgki.rc",
-    src: "etc/init.mtkgki.rc",
+    src: "etc/init/hw/init.mtkgki.rc",
     sub_dir: "init/hw",
     vendor: true
 }
 
 prebuilt_etc {
     name: "init.project.rc",
-    src: "etc/init.project.rc",
+    src: "etc/init/hw/init.project.rc",
     sub_dir: "init/hw",
     vendor: true
 }
 
 prebuilt_etc {
     name: "init.sensor_2_0.rc",
-    src: "etc/init.sensor_2_0.rc",
+    src: "etc/init/hw/init.sensor_2_0.rc",
     sub_dir: "init/hw",
     vendor: true
 }
