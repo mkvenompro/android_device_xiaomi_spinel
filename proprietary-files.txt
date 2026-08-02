@@ -257,9 +257,6 @@ vendor/lib64/vendor.mediatek.hardware.bluetooth.audio@2.1.so
 vendor/lib64/vendor.mediatek.hardware.bluetooth.audio@2.2.so
 
 # Boot
-vendor/bin/hw/android.hardware.boot@1.2-service
-vendor/etc/init/android.hardware.boot@1.2-service.rc
-vendor/etc/vintf/manifest/android.hardware.boot@1.2.xml
 
 # Camera
 system_ext/lib/vendor.mediatek.hardware.camera.atms-V1-ndk.so
@@ -2583,15 +2580,12 @@ vendor/etc/gnss/carrier/agps_profiles_conf2_carrier_Verizon_Wireless.xml
 vendor/etc/gnss/agps_profiles_conf2.xml
 
 # Health
-vendor/bin/hw/android.hardware.health@2.1-service
 vendor/bin/hw/vendor.xiaomi.hardware.micharge@1.0-service
 vendor/bin/batterysecret
 vendor/bin/fuelgauged
-vendor/etc/init/android.hardware.health@2.1-service.rc
 vendor/etc/init/fuelgauged_init.rc
 vendor/etc/init/init.batterysecret.rc
 vendor/etc/init/vendor.xiaomi.hardware.micharge@1.0-service.rc
-vendor/etc/vintf/manifest/android.hardware.health@2.1.xml
 vendor/etc/vintf/manifest/vendor.xiaomi.hardware.micharge@1.0.xml
 vendor/lib/hw/vendor.xiaomi.hardware.micharge@1.0-impl.so
 vendor/lib/vendor.xiaomi.hardware.micharge@1.0.so
@@ -3898,9 +3892,7 @@ vendor/etc/ecc_list_OP236.xml
 vendor/etc/ecc_list_preference.xml
 vendor/etc/elliptic_sensor.xml
 vendor/etc/factory.ini
-vendor/etc/fstab.emmc
 vendor/etc/fstab.enableswap
-vendor/etc/fstab.mt6789
 vendor/etc/fstb.cfg
 vendor/etc/gbe.cfg
 vendor/etc/init.insmod.mt6789.cfg
@@ -3925,7 +3917,6 @@ vendor/etc/special_pws_channel.xml
 vendor/etc/task_profiles.json
 vendor/etc/thermalbreakboostconfig.xml
 vendor/etc/throttle.sh
-vendor/etc/ueventd.rc
 vendor/etc/usb_audio_accessory_only_policy_configuration.xml
 vendor/etc/vendor-apns-conf.xml
 vendor/etc/virtual-spn-conf-by-efgid1.xml
