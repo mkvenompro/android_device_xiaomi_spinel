@@ -96,3 +96,29 @@ prebuilt_etc {
     sub_dir: "init/hw",
     vendor: true
 }
+
+prebuilt_etc {
+    name: "init.fingerprint.rc",
+    src: "etc/init/hw/init.fingerprint.rc",
+    sub_dir: "init/hw",
+    vendor: true
+}
+
+prebuilt_etc {
+    name: "init.mt6789.power.rc",
+    src: "etc/init/hw/init.mt6789.power.rc",
+    sub_dir: "init/hw",
+    vendor: true
+}
+
+prebuilt_etc {
+    name: "init.insmod.mtk.cfg",
+    src: "etc/init.insmod.mtk.cfg",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "ueventd.mt6789.rc",
+    src: "etc/ueventd.mt6789.rc",
+    vendor: true,
+}

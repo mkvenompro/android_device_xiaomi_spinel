@@ -16,9 +16,6 @@ $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 # Allow userspace reboots
 $(call inherit-product, $(SRC_TARGET_DIR)/product/userspace_reboot.mk)
 
-# Enable updating of APEXes
-$(call inherit-product, $(SRC_TARGET_DIR)/product/updatable_apex.mk)
-
 # Inherit common MediaTek IMS
 $(call inherit-product-if-exists, vendor/mediatek/ims/ims.mk)
 
@@ -279,13 +276,18 @@ PRODUCT_PACKAGES += \
     fstab.mt6789.vendor_ramdisk \
     init.connectivity.common.rc \
     init.connectivity.rc \
+    init.fingerprint.rc \
+    init.insmod.mtk.cfg \
     init.modem.rc \
+    init.mt6789.power.rc \
     init.mt6789.rc \
     init.mt6789.usb.rc \
     init.mtkgki.rc \
     init.project.rc \
     init.recovery.usb.rc \
-    init.sensor_2_0.rc
+    init.sensor_2_0.rc \
+    init.zram.rc \
+    ueventd.mt6789.rc
 
 # Reduce system server verbosity.
 PRODUCT_SYSTEM_SERVER_DEBUG_INFO := false
