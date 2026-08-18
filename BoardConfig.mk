@@ -46,10 +46,9 @@ BOARD_BOOT_HEADER_VERSION := 4
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
 BOARD_RAMDISK_USE_LZ4 := true
 BOARD_KERNEL_SEPARATED_DTBO := true
-# NOTE: BOARD_INCLUDE_DTB_IN_BOOTIMG was removed on purpose.
-# This is a GKI (header v4) device — the generic boot.img must NOT carry a
-# DTB. The DTB is supplied to vendor_boot.img instead, via
-# BOARD_PREBUILT_DTBIMAGE_DIR below.
+# NOTE: BOARD_INCLUDE_DTB_IN_BOOTIMG is required by AOSP 15+ when using
+# BOARD_PREBUILT_DTBIMAGE_DIR. For GKI (header v4), the DTB goes into
+# vendor_boot.img automatically.
 BOARD_KERNEL_CMDLINE += bootopt=64S3,32N2,64N2
 BOARD_KERNEL_PAGESIZE := 4096
 BOARD_KERNEL_BASE := 0x3fff8000
@@ -73,6 +72,7 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_KERNEL):kernel
 
 # DTB
+BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_PREBUILT_DTBOIMAGE := $(KERNEL_PATH)/dtbo.img
 BOARD_PREBUILT_DTBIMAGE_DIR := $(KERNEL_PATH)/dtb
 
