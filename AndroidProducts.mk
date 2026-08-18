@@ -6,3 +6,8 @@
 
 PRODUCT_MAKEFILES := \
     $(LOCAL_DIR)/lineage_spinel.mk
+
+COMMON_LUNCH_CHOICES := \
+    lineage_spinel-trunk_staging-userdebug \
+    lineage_spinel-trunk_staging-user \
+    lineage_spinel-trunk_staging-eng
