@@ -6402,5 +6402,5 @@ vendor_dlkm/vendor_dlkm
 bin/iwpriv
 
 # other
-﻿vendor/lib/libaudioclient_aidl_conversion.so
+vendor/lib/libaudioclient_aidl_conversion.so
 
