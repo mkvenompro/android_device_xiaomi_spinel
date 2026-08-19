@@ -274,6 +274,7 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     fstab.mt6789 \
     fstab.mt6789.vendor_ramdisk \
+    fstab.enableswap \
     init.connectivity.common.rc \
     init.connectivity.rc \
     init.fingerprint.rc \
