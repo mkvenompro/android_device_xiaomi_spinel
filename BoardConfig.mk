@@ -7,6 +7,9 @@
 DEVICE_PATH := device/xiaomi/spinel
 KERNEL_PATH := device/xiaomi/spinel-kernel
 
+# SELinux (permissive for initial bringup)
+SELINUX_IGNORE_NEVERALLOWS := true
+
 # Architecture
 TARGET_ARCH := arm64
 TARGET_ARCH_VARIANT := armv8-2a-dotprod
@@ -46,7 +49,7 @@ BOARD_BOOT_HEADER_VERSION := 4
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
 BOARD_KERNEL_SEPARATED_DTBO := true
 # NOTE: For GKI (header v4), the DTB goes into vendor_boot.img automatically.
-BOARD_VENDOR_CMDLINE := bootopt=64S3,32N2,64N2
+BOARD_VENDOR_CMDLINE := bootopt=64S3,32N2,64N2 androidboot.selinux=permissive
 BOARD_VENDOR_BOOT_RAMDISK_COMPRESSION := lz4_legacy
 BOARD_KERNEL_PAGESIZE := 4096
 BOARD_KERNEL_BASE := 0x3fff8000
