@@ -1,0 +1,61 @@
+name: Generate device tree (aospdtgen)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dump_sha:
+        description: GitLab dump commit SHA (branch dump-redmi-spinel-os2.0.212.0.vpgmixm)
+        required: false
+        default: "51a7d8118db68c9caca33756452bde31f61b9552"
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          df -h
+
+      - name: Download and extract dump (streamed from GitLab)
+        run: |
+          set -euo pipefail
+          mkdir -p dump
+          curl -L --retry 3 --fail \
+            "https://gitlab.com/api/v4/projects/mkpromvp%2Fdumber-2-mk/repository/archive.tar.gz?sha=${{ github.event.inputs.dump_sha }}" \
+            | tar -xz --strip-components=1 -C dump
+          echo "--- dump top level ---"
+          ls -la dump
+
+      - name: Install aospdtgen
+        run: pip install aospdtgen
+
+      - name: Generate device tree
+        run: python -m aospdtgen dump -o output
+
+      - name: Disk usage after generation
+        run: df -h
+
+      - name: Commit generated tree
+        run: |
+          rm -rf dump
+          git config user.name "mkvenompro"
+          git config user.email "mkvenompro@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Generate device tree with aospdtgen from OS2.0.212.0.VPGMIXM dump"
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android_device_xiaomi_spinel
+          path: output
+          if-no-files-found: error
