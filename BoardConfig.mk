@@ -48,7 +48,7 @@ TARGET_BOARD_PLATFORM := mt6789
 BOARD_BOOT_HEADER_VERSION := 4
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
 BOARD_KERNEL_SEPARATED_DTBO := true
-# NOTE: For GKI (header v4), the DTB goes into vendor_boot.img automatically.
+
 BOARD_VENDOR_CMDLINE := bootopt=64S3,32N2,64N2 androidboot.selinux=permissive
 BOARD_VENDOR_BOOT_RAMDISK_COMPRESSION := lz4_legacy
 BOARD_KERNEL_PAGESIZE := 4096
@@ -63,19 +63,17 @@ BOARD_MKBOOTIMG_ARGS += --tags_offset $(BOARD_KERNEL_TAGS_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --dtb_offset $(BOARD_DTB_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 
-# Kernel
-# Kill lineage kernel build task while preserving kernel
+# Kernel (Prebuilt Config Fixed)
+TARGET_NO_KERNEL := false
 TARGET_NO_KERNEL_OVERRIDE := true
-# Workaround to make lineage's soong generator work
+TARGET_PREBUILT_KERNEL := $(KERNEL_PATH)/Image.gz
 TARGET_KERNEL_SOURCE := $(KERNEL_PATH)/kernel-headers
-LOCAL_KERNEL := $(KERNEL_PATH)/Image.gz
-PRODUCT_COPY_FILES += \
-    $(LOCAL_KERNEL):kernel
 
-# DTB
+# DTB (Fixed Conflict)
 BOARD_PREBUILT_DTBOIMAGE := $(KERNEL_PATH)/dtbo.img
 BOARD_PREBUILT_DTBIMAGE_DIR := $(KERNEL_PATH)/dtb
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
+BOARD_MOVE_DTB_TO_VENDOR_BOOT := true
 
 # Graphics
 TARGET_USES_VULKAN := true
@@ -129,9 +127,10 @@ TARGET_COPY_OUT_VENDOR := vendor
 TARGET_COPY_OUT_VENDOR_DLKM := vendor_dlkm
 TARGET_COPY_OUT_ODM_DLKM := odm_dlkm
 
-# Recovery
+# Recovery & Vendor Boot Configs
 BOARD_MOVE_GSI_AVB_KEYS_TO_VENDOR_BOOT := true
 BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
+BOARD_BUILD_VENDOR_RAMDISK_RECOVERY := true
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/rootdir/etc/fstab.mt6789
 TARGET_RECOVERY_PIXEL_FORMAT := BGRA_8888
 TARGET_USERIMAGES_USE_F2FS := true
