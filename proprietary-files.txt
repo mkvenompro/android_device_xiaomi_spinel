@@ -6392,15 +6392,6 @@ product/priv-app/HotwordEnrollmentYGoogleRISCV_WIDEBAND/HotwordEnrollmentYGoogle
 odm/lib/hw/displayfeature.default.so
 odm/lib64/hw/displayfeature.default.so
 
-# odm_dlkm
-odm_dlkm/odm_dlkm
-
-# vendor_dlkm
-vendor_dlkm/vendor_dlkm
-
-# bin
-bin/iwpriv
-
 # other
 vendor/lib/libaudioclient_aidl_conversion.so
 
