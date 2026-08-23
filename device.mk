@@ -19,6 +19,10 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/userspace_reboot.mk)
 # Inherit common MediaTek IMS
 $(call inherit-product-if-exists, vendor/mediatek/ims/ims.mk)
 
+# Bootanimation
+TARGET_SCREEN_HEIGHT := 1080
+TARGET_SCREEN_WIDTH := 2400
+
 # Keys
 $(call inherit-product-if-exists, vendor/private/keys/keys.mk)
 
@@ -44,6 +48,10 @@ AB_OTA_PARTITIONS := \
     vbmeta \
     vbmeta_system \
     vbmeta_vendor
+
+PRODUCT_PACKAGES += \
+    create_pl_dev \
+    create_pl_dev.recovery
 
 PRODUCT_PACKAGES += \
     update_engine \
@@ -130,6 +138,11 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     android.hardware.health@2.1-impl \
     android.hardware.health@2.1-service
+
+# Recovery Battery Fix
+PRODUCT_COPY_FILES += \
+    vendor/xiaomi/spinel/proprietary/vendor/bin/fuelgauged:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/bin/fuelgauged \
+    vendor/xiaomi/spinel/proprietary/vendor/bin/fuelgauged_nvram:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/bin/fuelgauged_nvram
 
 # HotwordEnrollement
 PRODUCT_COPY_FILES += \
@@ -222,10 +235,6 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.location.gps.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.location.gps.xml
 
-# ConsumerIR
-PRODUCT_COPY_FILES += \
-    frameworks/native/data/etc/android.hardware.consumerir.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.consumerir.xml
-
 # Power
 # Uses MTK power HAL from the OS2 dump (vendor.mediatek.hardware.mtkpower@1.0-service)
 
@@ -282,18 +291,21 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     fstab.mt6789 \
-    fstab.mt6789.vendor_ramdisk \
     fstab.enableswap \
+    init.aee.rc \
+    init.cgroup.rc \
     init.connectivity.common.rc \
     init.connectivity.rc \
     init.fingerprint.rc \
     init.insmod.mtk.cfg \
+    init_connectivity.rc \
     init.modem.rc \
     init.mt6789.power.rc \
     init.mt6789.rc \
     init.mt6789.usb.rc \
     init.mtkgki.rc \
     init.project.rc \
+    init.recovery.mt6789.rc \
     init.recovery.usb.rc \
     init.sensor_2_0.rc \
     init.zram.rc \
