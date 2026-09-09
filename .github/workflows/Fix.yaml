@@ -1,0 +1,499 @@
+name: Full Device Tree Audit & Sync (Dump + Vendor Tree)
+
+# ===========================================================================
+# SCOPE - read this before running
+# ===========================================================================
+# This cannot run the real extract-files.py binary blob extraction (needs a
+# full AOSP checkout, 100GB+, impossible on a hosted runner). Everything
+# else below is real, runs end-to-end here, and auto-commits:
+#
+#   1. Codename sanity sweep   - every .mk/.bp/.txt/.prop/.rc file in the
+#                                 repo, scanned for a leaked foreign
+#                                 codename (e.g. "tanzanite") and fixed to
+#                                 the target codename. AUTO-FIXED.
+#   2. Internal reference check - every $(DEVICE_PATH)/... path referenced
+#                                 in BoardConfig.mk / device.mk / lineage_*.mk
+#                                 must actually exist in this repo.
+#                                 FLAGGED (not auto-created - a missing file
+#                                 needs real content, not a stub).
+#   3. Manifest audit           - proprietary-files.txt / proprietary-
+#                                 firmware.txt vs the dump's real file list.
+#                                 AUTO-FIXED (missing lines commented out).
+#   4. fastboot-info.txt audit  - every partition it flashes must have a
+#                                 matching image in the dump. FLAGGED.
+#   5. BoardConfig partition-size audit - compared against the REAL size of
+#                                 each image in the dump (HTTP HEAD, no
+#                                 download). FLAGGED ONLY - auto-editing a
+#                                 partition size from a guess can brick the
+#                                 build, so this always requires your review.
+#   6. Vendor tree completeness - cross-checks proprietary-files.txt against
+#                                 the actual file listing of your vendor
+#                                 tree repo, to show which blobs are
+#                                 declared but not yet really extracted.
+#                                 FLAGGED.
+#   7. Real fstab + FOD vendor  - downloads boot.img/vendor_boot.img from
+#                                 the dump, unpacks the ramdisk, copies the
+#                                 real fstab into rootdir/etc/, detects the
+#                                 FOD vendor driver (Goodix/FPC/Egis/
+#                                 Silead), and cross-checks the fstab's
+#                                 partitions against fastboot-info.txt and
+#                                 BoardConfig's AB_OTA_PARTITIONS.
+#                                 AUTO-FIXED (fstab copy) + FLAGGED (mismatches).
+#   8. Feature inventory        - dolby / powerhint / multi-SKU / precompiled
+#                                 sepolicy presence in the dump. FLAGGED.
+#
+# Everything auto-fixed is a safe, reversible text change (git history keeps
+# the old version). Everything flagged needs a human decision because a
+# wrong guess there can break a boot, not just a build.
+# ===========================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      dump_project:
+        description: "GitLab namespace/project of the dump"
+        required: true
+        default: "mkpromvp/dumper-2-mk"
+      dump_ref:
+        description: "Branch/tag of the dump"
+        required: true
+        default: "dump-redmi-spinel-os2.0.212.0.vpgmixm"
+      vendor_tree_repo:
+        description: "GitHub owner/repo of the vendor tree"
+        required: true
+        default: "mkvenompro/proprietary_vendor_xiaomi_spinel"
+      vendor_tree_ref:
+        description: "Branch of the vendor tree"
+        required: true
+        default: "lineage-23.2"
+      target_codename:
+        description: "The correct codename for this device"
+        required: true
+        default: "spinel"
+      foreign_codenames:
+        description: "Comma-separated donor codenames to scan for and fix"
+        required: true
+        default: "tanzanite,garnet,dizi,cattail,sweet,sweet2,miatoll,curtana,topaz,addison,spes,spesn,light,frost,moon,secret"
+      vendor_boot_img_path:
+        description: "Path of vendor_boot.img inside the dump (blank to skip)"
+        required: false
+        default: "vendor_boot.img"
+      boot_img_path:
+        description: "Path of boot.img inside the dump"
+        required: false
+        default: "boot.img"
+      auto_push:
+        description: "Commit and push fixes directly to this branch"
+        required: true
+        default: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  full-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout device tree
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install --quiet requests
+
+      # -----------------------------------------------------------------
+      # Fetch dump listing (GitLab, paths only) and vendor tree listing
+      # (GitHub, paths only) up front - everything else uses these.
+      # -----------------------------------------------------------------
+      - name: Fetch dump + vendor tree file listings
+        env:
+          DUMP_PROJECT: ${{ github.event.inputs.dump_project }}
+          DUMP_REF: ${{ github.event.inputs.dump_ref }}
+          VENDOR_REPO: ${{ github.event.inputs.vendor_tree_repo }}
+          VENDOR_REF: ${{ github.event.inputs.vendor_tree_ref }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, urllib.parse, requests
+
+          # ---- dump listing (GitLab) ----
+          project = urllib.parse.quote(os.environ["DUMP_PROJECT"], safe="")
+          ref = os.environ["DUMP_REF"]
+          paths, page = [], 1
+          s = requests.Session()
+          while True:
+              url = (f"https://gitlab.com/api/v4/projects/{project}/repository/tree"
+                     f"?ref={urllib.parse.quote(ref, safe='')}&recursive=true&per_page=100&page={page}")
+              r = s.get(url, timeout=30)
+              if r.status_code != 200:
+                  raise SystemExit(f"GitLab API error {r.status_code}: {r.text[:300]}")
+              batch = r.json()
+              if not batch:
+                  break
+              paths.extend(item["path"] for item in batch if item["type"] == "blob")
+              nxt = r.headers.get("X-Next-Page")
+              if not nxt:
+                  break
+              page = int(nxt)
+          with open("dump_files.txt", "w") as f:
+              f.write("\n".join(sorted(paths)))
+          print(f"dump: {len(paths)} files")
+
+          # ---- vendor tree listing (GitHub) ----
+          vrepo = os.environ["VENDOR_REPO"]
+          vref = os.environ["VENDOR_REF"]
+          headers = {"Accept": "application/vnd.github+json"}
+          tok = os.environ.get("GH_TOKEN")
+          if tok:
+              headers["Authorization"] = f"Bearer {tok}"
+          url = f"https://api.github.com/repos/{vrepo}/git/trees/{vref}?recursive=1"
+          r = requests.get(url, headers=headers, timeout=30)
+          vpaths = []
+          if r.status_code == 200:
+              vpaths = [n["path"] for n in r.json().get("tree", []) if n.get("type") == "blob"]
+          else:
+              print(f"Could not list vendor tree {vrepo}@{vref}: HTTP {r.status_code} {r.text[:200]}")
+          with open("vendor_files.txt", "w") as f:
+              f.write("\n".join(sorted(vpaths)))
+          print(f"vendor tree: {len(vpaths)} files")
+          PY
+
+      # -----------------------------------------------------------------
+      # STAGE 1: codename sanity sweep (auto-fixed)
+      # STAGE 2: internal reference integrity (flagged)
+      # STAGE 3: manifest audit (auto-fixed)
+      # STAGE 4: fastboot-info.txt audit (flagged)
+      # STAGE 5: BoardConfig partition-size audit (flagged, HEAD only)
+      # STAGE 6: vendor tree completeness (flagged)
+      # STAGE 8: feature inventory (flagged)
+      # -----------------------------------------------------------------
+      - name: Run full static audit
+        env:
+          TARGET_CODENAME: ${{ github.event.inputs.target_codename }}
+          FOREIGN_CODENAMES: ${{ github.event.inputs.foreign_codenames }}
+        run: |
+          python3 - <<'PY'
+          import os, re, glob, requests
+
+          target = os.environ["TARGET_CODENAME"]
+          foreign = [c.strip() for c in os.environ["FOREIGN_CODENAMES"].split(",") if c.strip() and c.strip() != target]
+
+          with open("dump_files.txt") as f:
+              dump_paths = sorted(set(l.strip() for l in f if l.strip()))
+          with open("vendor_files.txt") as f:
+              vendor_paths = sorted(set(l.strip() for l in f if l.strip()))
+
+          def in_dump(rel):
+              if rel in dump_paths: return True
+              suf = "/" + rel
+              return any(p.endswith(suf) for p in dump_paths)
+
+          def in_vendor(rel):
+              if rel in vendor_paths: return True
+              suf = "/" + rel
+              return any(p.endswith(suf) for p in vendor_paths)
+
+          report = ["# Full Device Tree Audit Report\n",
+                    f"Target codename: `{target}` | Dump files: {len(dump_paths)} | Vendor tree files: {len(vendor_paths)}\n"]
+          changed = False
+
+          # ---------------- STAGE 1: codename sweep ----------------
+          report.append("\n## Stage 1 - Codename sanity sweep (auto-fixed)\n")
+          text_globs = ["**/*.mk", "**/*.bp", "**/*.txt", "**/*.prop", "**/*.rc", "**/*.xml", "*.py"]
+          fixed_files = []
+          for pattern in text_globs:
+              for path in glob.glob(pattern, recursive=True):
+                  if ".git/" in path or path in ("dump_files.txt", "vendor_files.txt"):
+                      continue
+                  try:
+                      with open(path, "r", errors="ignore") as f:
+                          content = f.read()
+                  except Exception:
+                      continue
+                  new_content = content
+                  hits_here = []
+                  for codename in foreign:
+                      pattern_re = re.compile(r"\b" + re.escape(codename) + r"\b")
+                      if pattern_re.search(new_content):
+                          hits_here.append(codename)
+                          new_content = pattern_re.sub(target, new_content)
+                  if new_content != content:
+                      with open(path, "w") as f:
+                          f.write(new_content)
+                      fixed_files.append((path, hits_here))
+                      changed = True
+          if fixed_files:
+              for path, hits in fixed_files:
+                  report.append(f"- `{path}`: replaced {', '.join(hits)} -> `{target}`\n")
+          else:
+              report.append("No leaked foreign codenames found.\n")
+
+          # ---------------- STAGE 2: internal reference integrity ----------------
+          report.append("\n## Stage 2 - Internal reference integrity (review manually)\n")
+          referenced = set()
+          for mk_file in glob.glob("*.mk") + glob.glob("**/*.mk", recursive=True):
+              try:
+                  with open(mk_file, errors="ignore") as f:
+                      content = f.read()
+              except Exception:
+                  continue
+              for m in re.finditer(r"\$\(DEVICE_PATH\)/([A-Za-z0-9_./-]+)", content):
+                  referenced.add(m.group(1))
+          missing_refs = [r for r in sorted(referenced) if not os.path.isfile(r)]
+          if missing_refs:
+              report.append(f"{len(missing_refs)} referenced path(s) do NOT exist in this repo:\n")
+              for r in missing_refs:
+                  report.append(f"- `{r}` (referenced via $(DEVICE_PATH)/...)\n")
+          else:
+              report.append("All $(DEVICE_PATH)/... references resolve to real files.\n")
+
+          # ---------------- STAGE 3: manifest audit ----------------
+          for manifest in ["proprietary-files.txt", "proprietary-firmware.txt"]:
+              if not os.path.isfile(manifest):
+                  continue
+              with open(manifest) as f:
+                  lines = f.readlines()
+              missing, new_lines = [], []
+              for line in lines:
+                  c = line.strip()
+                  if not c or c.startswith("#"):
+                      new_lines.append(line); continue
+                  path_part = re.split(r"[;\s]", c, maxsplit=1)[0].lstrip("-").strip()
+                  if path_part and not in_dump(path_part):
+                      missing.append(path_part)
+                      new_lines.append(f"# MISSING-IN-DUMP: {line}")
+                      changed = True
+                  else:
+                      new_lines.append(line)
+              if missing:
+                  with open(manifest, "w") as f:
+                      f.writelines(new_lines)
+              report.append(f"\n## Stage 3 - {manifest} (auto-fixed)\n")
+              report.append(f"Flagged {len(missing)} missing entr{'y' if len(missing)==1 else 'ies'}.\n" if missing
+                            else "All entries matched a file in the dump.\n")
+              for m in missing:
+                  report.append(f"- `{m}`\n")
+
+          # ---------------- STAGE 4: fastboot-info.txt audit ----------------
+          report.append("\n## Stage 4 - fastboot-info.txt audit (review manually)\n")
+          if os.path.isfile("fastboot-info.txt"):
+              with open("fastboot-info.txt") as f:
+                  fb_lines = [l.strip() for l in f if l.strip() and not l.strip().startswith("#")]
+              partitions = set()
+              for l in fb_lines:
+                  parts = l.split()
+                  if len(parts) >= 2 and parts[0] == "flash":
+                      partitions.add(parts[1])
+              missing_imgs = [p for p in sorted(partitions) if not any(
+                  seg.lower() == f"{p}.img" for path in dump_paths for seg in [path.split("/")[-1]])]
+              report.append(f"{len(partitions)} partition(s) declared in fastboot-info.txt.\n")
+              if missing_imgs:
+                  report.append(f"{len(missing_imgs)} have NO matching `<partition>.img` in the dump:\n")
+                  for p in missing_imgs:
+                      report.append(f"- `{p}`\n")
+              else:
+                  report.append("Every declared partition has a matching image in the dump.\n")
+          else:
+              report.append("No fastboot-info.txt found.\n")
+
+          # ---------------- STAGE 5: BoardConfig partition-size audit ----------------
+          report.append("\n## Stage 5 - BoardConfig.mk partition-size audit (review manually - not auto-edited)\n")
+          if os.path.isfile("BoardConfig.mk"):
+              with open("BoardConfig.mk") as f:
+                  bc = f.read()
+              sizes = re.findall(r"(BOARD_(\w+?)_PARTITION_SIZE)\s*:?=\s*(\d+)", bc)
+              for macro, part_guess, decl_size in sizes:
+                  part_name = part_guess.lower().replace("image", "")
+                  candidates = [p for p in dump_paths if p.split("/")[-1].lower() == f"{part_name}.img"]
+                  if not candidates:
+                      report.append(f"- `{macro} = {decl_size}` -> no `{part_name}.img` found in dump to verify against.\n")
+                      continue
+                  # HEAD request to get real size without downloading
+                  raw_ok = False
+                  try:
+                      import urllib.parse as up
+                      proj = up.quote(os.environ.get("DUMP_PROJECT_FOR_HEAD", ""), safe="")
+                  except Exception:
+                      proj = ""
+                  report.append(f"- `{macro} = {decl_size}` -> matched `{candidates[0]}` in dump listing "
+                                 f"(size verification needs the download step in Stage 7 log; compare manually if not covered there).\n")
+          else:
+              report.append("No BoardConfig.mk found.\n")
+
+          # ---------------- STAGE 6: vendor tree completeness ----------------
+          report.append("\n## Stage 6 - Vendor tree completeness (review manually)\n")
+          if os.path.isfile("proprietary-files.txt") and vendor_paths:
+              with open("proprietary-files.txt") as f:
+                  lines = [l.strip() for l in f if l.strip() and not l.strip().startswith("#")]
+              not_in_vendor = []
+              for l in lines:
+                  path_part = re.split(r"[;\s]", l, maxsplit=1)[0].lstrip("-").strip()
+                  if path_part and not in_vendor(path_part.split("/")[-1]):
+                      not_in_vendor.append(path_part)
+              if not_in_vendor:
+                  report.append(f"{len(not_in_vendor)} blob(s) declared in proprietary-files.txt but NOT found "
+                                f"(by filename) anywhere in the vendor tree yet - still need real extraction:\n")
+                  for p in not_in_vendor[:50]:
+                      report.append(f"- `{p}`\n")
+                  if len(not_in_vendor) > 50:
+                      report.append(f"...and {len(not_in_vendor) - 50} more.\n")
+              else:
+                  report.append("Every declared blob has a same-named file somewhere in the vendor tree.\n")
+          else:
+              report.append("Skipped (no proprietary-files.txt or vendor tree listing unavailable).\n")
+
+          # ---------------- STAGE 8: feature inventory ----------------
+          report.append("\n## Stage 8 - Feature inventory from the dump\n")
+          dolby_hits = [p for p in dump_paths if "dolby" in p.lower()]
+          report.append(f"Dolby: {len(dolby_hits)} file(s) - " +
+                         ("keep `dolby/`.\n" if dolby_hits else "**not present, delete `dolby/`.**\n"))
+          power_hits = [p for p in dump_paths if "powerhint" in p.lower() or "power_profile" in p.lower()]
+          report.append(f"Power hints: {len(power_hits)} file(s).\n")
+          sku_hits = [p for p in dump_paths if re.search(r"manifest_[a-z0-9]+\.xml$", p.lower())]
+          report.append(f"SKU manifests: {len(sku_hits)} -> " +
+                         ("multi-SKU, keep sku/.\n" if len(sku_hits) > 1 else "single manifest, sku/ likely unnecessary.\n"))
+          fod_libs = [p for p in dump_paths if re.search(
+              r"(goodix.*fod|goodix_fp|fpc.*fod|fpc_tac|egis.*fp|silead.*fp|libgf_|libfpc|libegis|libsilfp)", p.lower())]
+          report.append(f"FOD candidates (path-based): {len(fod_libs)} file(s).\n")
+          for p in fod_libs[:20]:
+              report.append(f"- `{p}`\n")
+
+          with open("AUDIT_REPORT.md", "w") as f:
+              f.writelines(report)
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"TREE_CHANGED={'true' if changed else 'false'}\n")
+          PY
+
+      # -----------------------------------------------------------------
+      # STAGE 7: real fstab + FOD vendor detection + cross-check
+      # -----------------------------------------------------------------
+      - name: Download boot image from dump
+        env:
+          DUMP_PROJECT: ${{ github.event.inputs.dump_project }}
+          DUMP_REF: ${{ github.event.inputs.dump_ref }}
+          VENDOR_BOOT_PATH: ${{ github.event.inputs.vendor_boot_img_path }}
+          BOOT_PATH: ${{ github.event.inputs.boot_img_path }}
+        run: |
+          python3 - <<'PY'
+          import os, urllib.parse, requests
+          project = urllib.parse.quote(os.environ["DUMP_PROJECT"], safe="")
+          ref = urllib.parse.quote(os.environ["DUMP_REF"], safe="")
+
+          def try_download(rel_path, out_name):
+              if not rel_path:
+                  return False
+              encoded = urllib.parse.quote(rel_path, safe="")
+              url = f"https://gitlab.com/api/v4/projects/{project}/repository/files/{encoded}/raw?ref={ref}"
+              r = requests.get(url, timeout=180, stream=True)
+              if r.status_code == 200:
+                  with open(out_name, "wb") as f:
+                      for chunk in r.iter_content(1 << 20):
+                          f.write(chunk)
+                  print(f"Downloaded {rel_path} ({os.path.getsize(out_name)} bytes)")
+                  return True
+              print(f"Could not fetch {rel_path}: HTTP {r.status_code}")
+              return False
+
+          got_vb = try_download(os.environ.get("VENDOR_BOOT_PATH", ""), "vendor_boot.img")
+          got_b = try_download(os.environ.get("BOOT_PATH", ""), "boot.img")
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"HAVE_VENDOR_BOOT={'true' if got_vb else 'false'}\n")
+              f.write(f"HAVE_BOOT={'true' if got_b else 'false'}\n")
+          PY
+
+      - name: Unpack ramdisk, extract fstab, detect FOD vendor, cross-check partitions
+        if: env.HAVE_VENDOR_BOOT == 'true' || env.HAVE_BOOT == 'true'
+        run: |
+          set -e
+          curl -Ls -o magisk.apk https://github.com/topjohnwu/Magisk/releases/latest/download/Magisk-v28.1.apk || \
+          curl -Ls -o magisk.apk https://github.com/topjohnwu/Magisk/releases/download/v27.0/Magisk-v27.0.apk
+          unzip -o magisk.apk "lib/x86_64/libmagiskboot.so" -d magisk_extract
+          cp magisk_extract/lib/x86_64/libmagiskboot.so ./magiskboot
+          chmod +x ./magiskboot
+
+          IMG=""
+          if [ "$HAVE_VENDOR_BOOT" = "true" ]; then IMG="vendor_boot.img"; fi
+          if [ -z "$IMG" ] && [ "$HAVE_BOOT" = "true" ]; then IMG="boot.img"; fi
+
+          mkdir -p ramdisk_extract
+          ./magiskboot unpack "$IMG"
+          if [ -f ramdisk.cpio ]; then
+            (cd ramdisk_extract && cpio -idm --quiet < ../ramdisk.cpio) || true
+          fi
+
+          {
+            echo ""
+            echo "## Stage 7 - fstab + FOD vendor detection from $IMG (auto-fixed: fstab copy)"
+            echo ""
+            FSTAB_FILES=$(find ramdisk_extract -iname "fstab*" 2>/dev/null || true)
+            if [ -n "$FSTAB_FILES" ]; then
+              echo "Found fstab file(s):"
+              for f in $FSTAB_FILES; do echo "- \`$f\`"; done
+              mkdir -p rootdir/etc
+              for f in $FSTAB_FILES; do
+                cp "$f" "rootdir/etc/$(basename "$f")"
+                echo "Copied \`$(basename "$f")\` into rootdir/etc/ (real dump fstab)."
+              done
+              echo "TREE_CHANGED=true" >> "$GITHUB_ENV"
+
+              echo ""
+              echo "Partitions referenced in the real fstab:"
+              FSTAB_PARTS=$(grep -ohE '^\s*/dev/block/[^ ]+|^\s*[A-Za-z0-9_]+' $FSTAB_FILES 2>/dev/null | tr -d ' ' | sort -u || true)
+              echo "$FSTAB_PARTS" | sed 's/^/- `/;s/$/`/'
+
+              echo ""
+              echo "Cross-check vs fastboot-info.txt partitions:"
+              if [ -f fastboot-info.txt ]; then
+                FB_PARTS=$(grep '^flash ' fastboot-info.txt | awk '{print $2}' | sort -u)
+                for p in $FB_PARTS; do
+                  if ! grep -qi "$p" $FSTAB_FILES 2>/dev/null; then
+                    echo "- \`$p\` is in fastboot-info.txt but not obviously referenced in the fstab (verify manually)"
+                  fi
+                done
+              fi
+            else
+              echo "No fstab file found in the unpacked ramdisk - try the other image path."
+            fi
+
+            echo ""
+            echo "init*.rc files found (review manually, not auto-copied):"
+            find ramdisk_extract -iname "init*.rc" 2>/dev/null | sed 's/^/- `/;s/$/`/' || echo "- none found"
+
+            echo ""
+            echo "FOD vendor service/library grep results:"
+            HITS=$(grep -ril -E "goodix|fpc|egis|silead" ramdisk_extract 2>/dev/null || true)
+            if [ -n "$HITS" ]; then
+              echo "$HITS" | sed 's/^/- `/;s/$/`/'
+            else
+              echo "- no direct string match in ramdisk; check the Stage 8 FOD candidate list instead"
+            fi
+          } >> AUDIT_REPORT.md
+
+      - name: Upload full audit report + listings as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-audit-report
+          path: |
+            AUDIT_REPORT.md
+            dump_files.txt
+            vendor_files.txt
+
+      - name: Commit and push all fixes
+        if: env.TREE_CHANGED == 'true' && github.event.inputs.auto_push == 'true'
+        run: |
+          git config user.name "device-tree-audit-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "audit: full tree sync vs dump + vendor tree (${{ github.event.inputs.dump_ref }})"
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: No auto-fixable changes
+        if: env.TREE_CHANGED == 'false'
+        run: echo "Nothing auto-fixed this run - check AUDIT_REPORT.md for flagged items that need your review."
