@@ -1,0 +1,219 @@
+name: Sync device configs from stock ROM (spinel)
+
+on:
+  workflow_dispatch:
+    inputs:
+      stock_url:
+        description: 'Stock Fastboot ROM tgz URL (spinel, OS2.0.212.0.VPGMIXM)'
+        required: true
+        default: 'https://bigota.d.miui.com/OS2.0.212.0.VPGMIXM/spinel_global_images_OS2.0.212.0.VPGMIXM_20260311.0000.00_15.0_global_1e7d24d317.tgz'
+
+env:
+  DEVICE: spinel
+  VENDOR: xiaomi
+
+concurrency:
+  group: configs-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-configs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout device tree
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            p7zip-full 7zip \
+            simg2img simg2img-android img2simg \
+            android-sdk-libsparse-utils \
+            android-sdk-liblp \
+            erofs-utils squashfs-tools \
+            python3 unzip xz-utils zstd lz4 cpio || true
+          if ! command -v lpunpack >/dev/null 2>&1; then
+            echo "lpunpack not in apt - downloading prebuilt"
+            curl -fL -o /usr/local/bin/lpunpack \
+              https://raw.githubusercontent.com/AndroidDumps/Firmware_extractor/master/tools/lpunpack
+            chmod +x /usr/local/bin/lpunpack
+          fi
+          command -v lpunpack simg2img 7z fsck.erofs || echo "some tools missing"
+
+      - name: Download official stock ROM (spinel)
+        run: |
+          mkdir -p /tmp/rom
+          cd /tmp/rom
+          curl -fL --retry 3 -C - \
+            "${{ github.event.inputs.stock_url }}" \
+            -o stock.tgz
+          ls -la stock.tgz
+
+      - name: Extract ROM archive
+        run: |
+          cd /tmp/rom
+          tar -xzf stock.tgz
+          find . -maxdepth 4 -type f -name "*.img" | sort
+
+      - name: Locate images directory
+        id: locate
+        run: |
+          if [ -d /tmp/rom/images ]; then
+            echo "imgdir=/tmp/rom/images" >> "$GITHUB_OUTPUT"
+          elif [ -d /tmp/rom/*/images ]; then
+            echo "imgdir=$(echo /tmp/rom/*/images)" >> "$GITHUB_OUTPUT"
+          else
+            echo "imgdir=/tmp/rom" >> "$GITHUB_OUTPUT"
+          fi
+          IMG="${{ steps.locate.outputs.imgdir }}"
+          echo "Resolved imgdir: $IMG"
+          ls -la "$IMG" | head -60
+
+      - name: Unpack super.img with lpunpack (dynamic partitions)
+        run: |
+          set -e
+          IMG="${{ steps.locate.outputs.imgdir }}"
+          mkdir -p /tmp/super_out
+          if [ ! -f "$IMG/super.img" ]; then
+            cat "$IMG"/super_*.img > /tmp/super_full_sparse.img
+          else
+            cp "$IMG/super.img" /tmp/super_full_sparse.img
+          fi
+          simg2img /tmp/super_full_sparse.img /tmp/super.raw || \
+            cp /tmp/super_full_sparse.img /tmp/super.raw
+          echo "super.raw: $(du -h /tmp/super.raw | cut -f1)"
+          cd /tmp/super_out
+          lpunpack /tmp/super.raw .
+          ls -la
+
+      - name: Extract vendor filesystem (auto-detect ext4/erofs/squashfs)
+        run: |
+          set -e
+          OUT=/tmp/super_out
+          VENDOR_FS=/tmp/vendor_root
+          rm -rf "$VENDOR_FS"; mkdir -p "$VENDOR_FS"
+          fs_type() {
+            local f="$1"; local m
+            m=$(file -b "$f" 2>/dev/null)
+            case "$m" in
+              *"Linux rev 1.0 ext4"*) echo ext4 ;;
+              *"erofs"*)            echo erofs ;;
+              *"Squashfs"*)         echo squashfs ;;
+              *"Android sparse image"*) echo sparse ;;
+              *) echo unknown ;;
+            esac
+          }
+          SRC="$OUT/vendor.img"
+          [ -f "$SRC" ] || SRC="$OUT/vendor_a.img"
+          if [ -z "$SRC" ] || [ ! -f "$SRC" ]; then
+            echo "No vendor image found in super"; ls "$OUT"; exit 1
+          fi
+          T=$(fs_type "$SRC")
+          echo "vendor img type: $T"
+          case "$T" in
+            sparse) simg2img "$SRC" /tmp/vendor.raw; SRC=/tmp/vendor.raw; T=$(fs_type "$SRC") ;;
+          esac
+          case "$T" in
+            ext4)     7z x -y -o"$VENDOR_FS" "$SRC" >/dev/null 2>&1 \
+                        || { FAILED=1; echo "7z ext4 failed"; } ;;
+            erofs)    fsck.erofs --extract="$VENDOR_FS" "$SRC" >/dev/null 2>&1 \
+                        || 7z x -y -o"$VENDOR_FS" "$SRC" >/dev/null 2>&1 ;;
+            squashfs) unsquashfs -f -d "$VENDOR_FS" "$SRC" >/dev/null 2>&1 ;;
+            *) echo "unknown fs: $T"; exit 1 ;;
+          esac
+          echo "vendor files: $(find "$VENDOR_FS" -type f 2>/dev/null | wc -l)"
+          ls "$VENDOR_FS"
+
+      - name: Reset configs dir (clean sync, dump-only source)
+        run: |
+          set -e
+          # Purge everything so configs reflects EXACTLY what the stock
+          # device's vendor/etc ships - no leftovers from other devices.
+          rm -rf configs
+          mkdir -p configs/audio configs/media configs/wifi configs/thermal \
+                   configs/permissions configs/dolby configs/vintf configs/seccomp
+
+      - name: Sync vendor/etc -> device configs
+        run: |
+          set -e
+          VF=/tmp/vendor_root/etc
+          C=configs
+          [ -d "$VF" ] || { echo "no vendor/etc"; exit 1; }
+
+          # ---------- root-level files (device tree needs) ----------
+          for f in hals.conf public.libraries.txt fstab.${DEVICE} fstab.enableswap; do
+            cp -v "$VF/$f" $C/ 2>/dev/null || echo "SKIP root/$f"
+          done
+
+          # ---------- audio ----------
+          for f in audio_device.xml audio_effects.xml audio_em.xml \
+                   audio_policy.conf audio_policy_configuration.xml \
+                   audio_engine_config.xml \
+                   aurisys_config.xml aurisys_config_rv.xml \
+                   media_codecs.xml media_codecs_dolby_audio.xml \
+                   media_codecs_vendor_audio.xml; do
+            cp -v "$VF/$f" $C/audio/ 2>/dev/null || echo "SKIP audio/$f"
+          done
+
+          # ---------- media ----------
+          for f in media_codecs_c2.xml media_codecs_performance.xml \
+                   media_codecs_google_tv.xml \
+                   media_profiles_V1_0.xml mtk_platform_codecs_config.xml; do
+            cp -v "$VF/$f" $C/media/ 2>/dev/null || echo "SKIP media/$f"
+          done
+
+          # ---------- wifi ----------
+          for f in wpa_supplicant.conf wpa_supplicant_overlay.conf \
+                   p2p_supplicant_overlay.conf hostapd_default.conf; do
+            cp -v "$VF/$f" $C/wifi/ 2>/dev/null || echo "SKIP wifi/$f"
+          done
+          # MTK keeps wifi confs under vendor/etc/wifi/ in some builds
+          if [ -d "$VF/wifi" ]; then
+            cp -v "$VF"/wifi/*.conf $C/wifi/ 2>/dev/null || true
+          fi
+
+          # ---------- thermal ----------
+          cp -v "$VF"/thermal/*.conf $C/thermal/ 2>/dev/null || true
+          cp -v "$VF"/thermal/*.json $C/thermal/ 2>/dev/null || true
+          echo "thermal synced: $(ls $C/thermal 2>/dev/null | wc -l) files"
+
+          # ---------- permissions ----------
+          cp -v "$VF"/permissions/privapp-permissions-*.xml $C/permissions/ 2>/dev/null || echo "no privapp permissions in vendor"
+          cp -v "$VF"/permissions/*.xml $C/permissions/ 2>/dev/null || true
+
+          # ---------- dolby ----------
+          cp -v "$VF"/dolby/*.xml $C/dolby/ 2>/dev/null || echo "no dolby in vendor"
+
+          # ---------- seccomp ----------
+          cp -v "$VF"/seccomp/* $C/seccomp/ 2>/dev/null || echo "no seccomp in vendor"
+
+          echo "=== final configs tree ==="
+          find $C -type f | sort
+
+      - name: Record source build for traceability
+        run: |
+          cat > configs/SOURCE.txt <<EOF
+          Configs synced from official stock ROM (spinel) via GitHub Actions.
+          URL : ${{ github.event.inputs.stock_url }}
+          Date: $(date -u +%Y-%m-%dT%H:%M:%S)
+          EOF
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No config changes"
+          else
+            git commit -m "configs: sync from stock ROM (spinel, OS2.0.212.0.VPGMIXM) [bot]"
+            git push origin HEAD
+          fi
