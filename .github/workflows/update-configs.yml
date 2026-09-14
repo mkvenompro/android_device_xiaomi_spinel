@@ -36,7 +36,11 @@ jobs:
             android-sdk-libsparse-utils \
             android-sdk-liblp \
             erofs-utils squashfs-tools \
-            python3 unzip xz-utils zstd lz4 cpio || true
+            python3 unzip xz-utils zstd lz4 cpio \
+            autoconf automake libtool pkg-config \
+            zlib1g-dev liblz4-dev liblzma-dev libzstd-dev \
+            libfuse-dev uuid-dev libattr1-dev libcap-dev \
+            file || true
           if ! command -v lpunpack >/dev/null 2>&1; then
             echo "lpunpack not in apt - downloading prebuilt"
             curl -fL -o /usr/local/bin/lpunpack \
@@ -53,7 +57,17 @@ jobs:
             install -m 755 img2simg /usr/local/bin/img2simg 2>/dev/null || true
             cd /
           fi
-          command -v lpunpack simg2img 7z fsck.erofs || echo "some tools missing"
+          # apt erofs-utils is too old for modern MTK erofs images; build latest.
+          echo "building latest erofs-utils from source"
+          cd /tmp
+          git clone --depth 1 https://github.com/erofs/erofs-utils.git erofs-utils
+          cd erofs-utils
+          ./autogen.sh
+          ./configure --disable-libfuse 2>/dev/null || ./configure
+          make -j$(nproc) 2>/dev/null || make
+          sudo make install
+          cd /
+          command -v lpunpack simg2img fsck.erofs 7z || echo "some tools missing"
 
       - name: Download official stock ROM (spinel)
         run: |
@@ -145,11 +159,12 @@ jobs:
           echo "erofs_magic=$erofs_magic sqfs_magic=$sqfs_magic ext4_magic=$ext4_magic"
 
           if [ "$erofs_magic" = "e2e1f5e0" ]; then
-            echo "FS: erofs"
-            fsck.erofs --extract="$VENDOR_FS" "$SRC" >/dev/null 2>&1 || {
+            echo "FS: erofs (using $(command -v fsck.erofs))"
+            if ! fsck.erofs --extract="$VENDOR_FS" "$SRC" 2>/tmp/erofs_err.txt; then
               echo "fsck.erofs failed - trying 7z"
+              cat /tmp/erofs_err.txt
               7z x -y -o"$VENDOR_FS" "$SRC" >/dev/null 2>&1 || { echo "7z erofs failed too"; exit 1; }
-            }
+            fi
           elif [ "$sqfs_magic" = "68737173" ]; then
             echo "FS: squashfs"
             unsquashfs -f -d "$VENDOR_FS" "$SRC" >/dev/null 2>&1 || { echo "unsquashfs failed"; exit 1; }
