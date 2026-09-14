@@ -179,11 +179,19 @@ jobs:
       - name: Reset configs dir (clean sync, dump-only source)
         run: |
           set -e
+          # This file is device-owned (declares spinel Dolby DMS). The stock
+          # ROM keeps it outside vendor/etc/vintf, so preserve across syncs.
+          mkdir -p /tmp/preserve
+          [ -f configs/vintf/framework_compatibility_matrix.xml ] && \
+            cp configs/vintf/framework_compatibility_matrix.xml /tmp/preserve/ || true
           # Purge everything so configs reflects EXACTLY what the stock
           # device's vendor/etc ships - no leftovers from other devices.
           rm -rf configs
           mkdir -p configs/audio configs/media configs/wifi configs/thermal \
                    configs/permissions configs/dolby configs/vintf configs/seccomp
+          # Restore the device-owned framework compatibility matrix
+          [ -f /tmp/preserve/framework_compatibility_matrix.xml ] && \
+            cp /tmp/preserve/framework_compatibility_matrix.xml configs/vintf/ || true
 
       - name: Sync vendor/etc -> device configs
         run: |
