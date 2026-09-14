@@ -179,19 +179,28 @@ jobs:
       - name: Reset configs dir (clean sync, dump-only source)
         run: |
           set -e
-          # This file is device-owned (declares spinel Dolby DMS). The stock
-          # ROM keeps it outside vendor/etc/vintf, so preserve across syncs.
+          # Device-owned files the stock ROM keeps OUTSIDE vendor/etc (so a
+          # clean sync would delete them). Preserve and restore across syncs:
+          #   - vintf/framework_compatibility_matrix.xml  (spinel Dolby DMS)
+          #   - permissions/privapp-permissions-com.mediatek.ims.xml (MTK IMS)
+          #   - permissions/privapp-permissions-hotword.xml (GMS hotword)
           mkdir -p /tmp/preserve
-          [ -f configs/vintf/framework_compatibility_matrix.xml ] && \
-            cp configs/vintf/framework_compatibility_matrix.xml /tmp/preserve/ || true
+          for f in \
+            vintf/framework_compatibility_matrix.xml \
+            permissions/privapp-permissions-com.mediatek.ims.xml \
+            permissions/privapp-permissions-hotword.xml; do
+            [ -f "configs/$f" ] && cp "configs/$f" /tmp/preserve/ || true
+          done
           # Purge everything so configs reflects EXACTLY what the stock
           # device's vendor/etc ships - no leftovers from other devices.
           rm -rf configs
           mkdir -p configs/audio configs/media configs/wifi configs/thermal \
                    configs/permissions configs/dolby configs/vintf configs/seccomp
-          # Restore the device-owned framework compatibility matrix
-          [ -f /tmp/preserve/framework_compatibility_matrix.xml ] && \
-            cp /tmp/preserve/framework_compatibility_matrix.xml configs/vintf/ || true
+          # Restore the device-owned files
+          for f in /tmp/preserve/*; do
+            [ -f "$f" ] && cp "$f" configs/$(basename "$f") || true
+          done
+          echo "preserved: $(ls /tmp/preserve | wc -l) files"
 
       - name: Sync vendor/etc -> device configs
         run: |
