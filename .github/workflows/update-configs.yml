@@ -196,6 +196,21 @@ jobs:
           for f in hals.conf public.libraries.txt fstab.${DEVICE} fstab.enableswap; do
             cp -v "$VF/$f" $C/ 2>/dev/null || echo "SKIP root/$f"
           done
+          # stock keeps hals.conf under sensors/ on MTK builds
+          cp -v "$VF/sensors/hals.conf" $C/hals.conf 2>/dev/null || echo "SKIP sensors/hals.conf"
+
+          # ---------- vintf (device manifest + compat matrices from stock) ----------
+          cp -v "$VF/vintf/manifest.xml" $C/vintf/manifest.xml 2>/dev/null || echo "SKIP vintf/manifest.xml"
+          cp -v "$VF/vintf/compatibility_matrix.xml" $C/vintf/compatibility_matrix.xml 2>/dev/null || echo "SKIP vintf/compatibility_matrix.xml"
+          cp -v "$VF/vintf/framework_compatibility_matrix.xml" $C/vintf/framework_compatibility_matrix.xml 2>/dev/null || echo "SKIP vintf/framework_compatibility_matrix.xml"
+          if [ -d "$VF/vintf/manifest" ]; then
+            mkdir -p $C/vintf/fragments
+            cp -v "$VF"/vintf/manifest/*.xml $C/vintf/fragments/ 2>/dev/null || true
+          fi
+
+          # ---------- seccomp ----------
+          cp -v "$VF"/seccomp/* $C/seccomp/ 2>/dev/null || echo "no seccomp in vendor"
+          cp -v "$VF"/seccomp_policy/* $C/seccomp/ 2>/dev/null || echo "no seccomp_policy in vendor"
 
           # ---------- audio ----------
           for f in audio_device.xml audio_effects.xml audio_em.xml \
@@ -235,9 +250,6 @@ jobs:
 
           # ---------- dolby ----------
           cp -v "$VF"/dolby/*.xml $C/dolby/ 2>/dev/null || echo "no dolby in vendor"
-
-          # ---------- seccomp ----------
-          cp -v "$VF"/seccomp/* $C/seccomp/ 2>/dev/null || echo "no seccomp in vendor"
 
           echo "=== final configs tree ==="
           find $C -type f | sort
