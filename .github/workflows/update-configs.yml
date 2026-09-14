@@ -43,6 +43,16 @@ jobs:
               https://raw.githubusercontent.com/AndroidDumps/Firmware_extractor/master/tools/lpunpack
             chmod +x /usr/local/bin/lpunpack
           fi
+          if ! command -v simg2img >/dev/null 2>&1; then
+            echo "simg2img not in apt - building from anestisb/android-simg2img"
+            cd /tmp
+            git clone --depth 1 https://github.com/anestisb/android-simg2img.git
+            cd android-simg2img
+            make 2>/dev/null || make
+            install -m 755 simg2img /usr/local/bin/simg2img
+            install -m 755 img2simg /usr/local/bin/img2simg 2>/dev/null || true
+            cd /
+          fi
           command -v lpunpack simg2img 7z fsck.erofs || echo "some tools missing"
 
       - name: Download official stock ROM (spinel)
@@ -84,9 +94,15 @@ jobs:
           else
             cp "$IMG/super.img" /tmp/super_full_sparse.img
           fi
-          simg2img /tmp/super_full_sparse.img /tmp/super.raw || \
+          # Convert sparse -> raw. MUST produce a valid raw image for lpunpack.
+          if file /tmp/super_full_sparse.img | grep -q "Android sparse"; then
+            echo "super is sparse - unsparsing with simg2img"
+            simg2img /tmp/super_full_sparse.img /tmp/super.raw
+          else
             cp /tmp/super_full_sparse.img /tmp/super.raw
+          fi
           echo "super.raw: $(du -h /tmp/super.raw | cut -f1)"
+          file /tmp/super.raw
           cd /tmp/super_out
           lpunpack /tmp/super.raw .
           ls -la
