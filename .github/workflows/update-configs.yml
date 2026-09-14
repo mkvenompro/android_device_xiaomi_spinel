@@ -113,35 +113,53 @@ jobs:
           OUT=/tmp/super_out
           VENDOR_FS=/tmp/vendor_root
           rm -rf "$VENDOR_FS"; mkdir -p "$VENDOR_FS"
-          fs_type() {
-            local f="$1"; local m
-            m=$(file -b "$f" 2>/dev/null)
-            case "$m" in
-              *"Linux rev 1.0 ext4"*) echo ext4 ;;
-              *"erofs"*)            echo erofs ;;
-              *"Squashfs"*)         echo squashfs ;;
-              *"Android sparse image"*) echo sparse ;;
-              *) echo unknown ;;
-            esac
-          }
-          SRC="$OUT/vendor.img"
-          [ -f "$SRC" ] || SRC="$OUT/vendor_a.img"
-          if [ -z "$SRC" ] || [ ! -f "$SRC" ]; then
-            echo "No vendor image found in super"; ls "$OUT"; exit 1
+          SRC=""
+          if [ -f "$OUT/vendor.img" ]; then SRC="$OUT/vendor.img"
+          elif [ -f "$OUT/vendor_a.img" ]; then SRC="$OUT/vendor_a.img"
           fi
-          T=$(fs_type "$SRC")
-          echo "vendor img type: $T"
-          case "$T" in
-            sparse) simg2img "$SRC" /tmp/vendor.raw; SRC=/tmp/vendor.raw; T=$(fs_type "$SRC") ;;
-          esac
-          case "$T" in
-            ext4)     7z x -y -o"$VENDOR_FS" "$SRC" >/dev/null 2>&1 \
-                        || { FAILED=1; echo "7z ext4 failed"; } ;;
-            erofs)    fsck.erofs --extract="$VENDOR_FS" "$SRC" >/dev/null 2>&1 \
-                        || 7z x -y -o"$VENDOR_FS" "$SRC" >/dev/null 2>&1 ;;
-            squashfs) unsquashfs -f -d "$VENDOR_FS" "$SRC" >/dev/null 2>&1 ;;
-            *) echo "unknown fs: $T"; exit 1 ;;
-          esac
+          if [ -z "$SRC" ]; then
+            echo "No vendor image found in super:"; ls -la "$OUT"; exit 1
+          fi
+          echo "vendor partition: $SRC"
+          file -b "$SRC" 2>/dev/null || true
+          ls -l "$SRC"
+
+          # Unsparse if needed (magic bytes of Android sparse image = 0xED26FF3A)
+          magic=$(od -A n -t x1 -N 4 "$SRC" | tr -d ' \n')
+          echo "vendor magic: $magic"
+          if [ "$magic" = "3aff26ed" ]; then
+            echo "sparse -> simg2img"
+            simg2img "$SRC" /tmp/vendor.raw
+            SRC=/tmp/vendor.raw
+            magic=$(od -A n -t x1 -N 4 "$SRC" | tr -d ' \n')
+            echo "raw magic now: $magic"
+          fi
+
+          # Detect fs by magic bytes, with tool fallbacks:
+          # erofs  : magic at offset 1024  = E2 E1 F5 E0
+          # squashfs: magic at offset 0     = "hsqs" (68 73 71 73)
+          # ext4   : magic at offset 1080  = 53 EF
+          erofs_magic=$(od -A n -t x1 -j 1024 -N 4 "$SRC" | tr -d ' \n')
+          sqfs_magic=$(od -A n -t x1 -N 4 "$SRC" | tr -d ' \n')
+          ext4_magic=$(od -A n -t x1 -j 1080 -N 2 "$SRC" | tr -d ' \n')
+          echo "erofs_magic=$erofs_magic sqfs_magic=$sqfs_magic ext4_magic=$ext4_magic"
+
+          if [ "$erofs_magic" = "e2e1f5e0" ]; then
+            echo "FS: erofs"
+            fsck.erofs --extract="$VENDOR_FS" "$SRC" >/dev/null 2>&1 || {
+              echo "fsck.erofs failed - trying 7z"
+              7z x -y -o"$VENDOR_FS" "$SRC" >/dev/null 2>&1 || { echo "7z erofs failed too"; exit 1; }
+            }
+          elif [ "$sqfs_magic" = "68737173" ]; then
+            echo "FS: squashfs"
+            unsquashfs -f -d "$VENDOR_FS" "$SRC" >/dev/null 2>&1 || { echo "unsquashfs failed"; exit 1; }
+          elif [ "$ext4_magic" = "53ef" ]; then
+            echo "FS: ext4"
+            7z x -y -o"$VENDOR_FS" "$SRC" >/dev/null 2>&1 || { echo "7z ext4 failed"; exit 1; }
+          else
+            echo "UNKNOWN filesystem - cannot extract"
+            exit 1
+          fi
           echo "vendor files: $(find "$VENDOR_FS" -type f 2>/dev/null | wc -l)"
           ls "$VENDOR_FS"
 
