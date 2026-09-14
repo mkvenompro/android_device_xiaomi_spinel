@@ -30,24 +30,22 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
+          # NOTE: only packages that exist in the runner's repo go here -
+          # a single missing package would abort the whole apt-get.
           sudo apt-get install -y \
             p7zip-full 7zip \
-            simg2img simg2img-android img2simg \
-            android-sdk-libsparse-utils \
-            android-sdk-liblp \
             erofs-utils squashfs-tools \
-            python3 unzip xz-utils zstd lz4 cpio \
+            python3 unzip xz-utils zstd lz4 cpio file \
             autoconf automake libtool pkg-config \
             zlib1g-dev liblz4-dev liblzma-dev libzstd-dev \
-            libfuse-dev uuid-dev libattr1-dev libcap-dev \
-            file || true
+            uuid-dev libattr1-dev libcap-dev || true
           if ! command -v lpunpack >/dev/null 2>&1; then
             echo "lpunpack not in apt - downloading prebuilt"
             curl -fL -o /usr/local/bin/lpunpack \
               https://raw.githubusercontent.com/AndroidDumps/Firmware_extractor/master/tools/lpunpack
             chmod +x /usr/local/bin/lpunpack
           fi
-          if ! command -v simg2img >/dev/null 2>&1; then
+          if ! command -v simg2img >/dev/null 2>&1 || ! command -v img2simg >/dev/null 2>&1; then
             echo "simg2img not in apt - building from anestisb/android-simg2img"
             cd /tmp
             git clone --depth 1 https://github.com/anestisb/android-simg2img.git
@@ -63,11 +61,11 @@ jobs:
           git clone --depth 1 https://github.com/erofs/erofs-utils.git erofs-utils
           cd erofs-utils
           ./autogen.sh
-          ./configure --disable-libfuse 2>/dev/null || ./configure
-          make -j$(nproc) 2>/dev/null || make
+          ./configure --disable-libfuse
+          make -j$(nproc)
           sudo make install
           cd /
-          command -v lpunpack simg2img fsck.erofs 7z || echo "some tools missing"
+          command -v lpunpack simg2img img2simg fsck.erofs 7z || echo "some tools missing"
 
       - name: Download official stock ROM (spinel)
         run: |
