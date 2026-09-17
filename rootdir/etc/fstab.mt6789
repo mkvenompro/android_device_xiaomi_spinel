@@ -49,7 +49,7 @@ odm_dlkm /odm_dlkm ext4 ro wait,slotselect,avb,logical,first_stage_mount
 /dev/block/by-name/frp /persistent emmc defaults defaults
 /dev/block/by-name/nvram /nvram emmc defaults defaults
 /dev/block/by-name/proinfo /proinfo emmc defaults defaults
-/dev/block/by-name/lk /bootloader emmc defaults defaults
+/dev/block/by-name/lk1 /bootloader emmc defaults defaults
 /dev/block/by-name/lk2 /bootloader2 emmc defaults defaults
 /dev/block/by-name/para /para emmc defaults defaults
 /dev/block/by-name/misc /misc emmc defaults defaults
