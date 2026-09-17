@@ -8,7 +8,6 @@ DEVICE_PATH := device/xiaomi/spinel
 KERNEL_PATH := device/xiaomi/spinel-kernel
 
 # SELinux (permissive for initial bringup)
-SELINUX_IGNORE_NEVERALLOWS := true
 
 # Architecture
 TARGET_ARCH := arm64
